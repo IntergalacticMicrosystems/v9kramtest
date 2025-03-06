@@ -25,13 +25,13 @@ CheckVideoRAM:
 	nop				; Delay for I/O.
 	cmp	word [es:0],0720h	; Read it, the same value?
 	jne	NOVID			; --> if no
-	
+
 	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
 
 	jmp	CVREXIT			; -->
 
 
-NOVID:	
+NOVID:
 ; ----------------------------------------------------------------------------
 ; No MDA/CGA/A0000 video RAM found.
 ; ----------------------------------------------------------------------------
@@ -68,11 +68,11 @@ TVAR:
 ;
 ; On entry, ES is pointing to Address F0000h
 ; This diagnostic uses only 96 bytes of the RAM. We will now test those 96 bytes before we commit to using them.
-; 
+;
 ;   MDA: 4 KB of video RAM. The last 96 bytes are unused by the card - what this diagnostic will use.
 ;   CGA: The last 96 bytes of the first 4 KB are unused by the card - what this diagnostic will use.
 ; A0000: The 96 bytes starting at offset 4000h.
-; 
+;
 ; Test the 96 bytes. If that test fails, halt the CPU.
 
 	mov	ax,0FFFFh		; First test data pattern
@@ -94,11 +94,11 @@ TVAR:
 
 	; They do, so on to next test pattern.
 	sub	ax,5555h		; Next pattern, overflow?
-	jnc	.L16			; --> if no 
+	jnc	.L16			; --> if no
 
 	jmp	.PASS			; -->
 
-.FAIL:	
+.FAIL:
 ; ----------------------------------------------------------------------------
 ; MDA/CGA: Failure of the last 96 bytes of MDA/CGA video RAM.
 ;   A0000: Failure of the 96 bytes at offset 4000h within the RAM.
@@ -133,7 +133,7 @@ TVAR:
 .L40:	mov	al,[cs:si]		; Read character
 	inc	si
 	and	al,al			; End of the text?
-	jz	.S40			; --> if yes 
+	jz	.S40			; --> if yes
 	stosw				; Write character plus attribute { STOSW: AX-->[ES:DI], then DI=DI+2 }
 	jmp	.L40			; -->
 %endif
@@ -157,7 +157,7 @@ TVAR:
 
 ; Info:	SS won't change anymore and will serve as a permanent pointer to the video RAM segment.
 
-; Info:	We now have a stack. Therefore, we can now use '__CHECKPOINT__' (uses the stack) instead 
+; Info:	We now have a stack. Therefore, we can now use '__CHECKPOINT__' (uses the stack) instead
 ;	of '__CHECKPOINT__NOSTACK__' (does not use the stack). This will reduce the amount of code.
 
 	__CHECKPOINT__ 0x0E ;++++++++++++++++++++++++++++++++++++++++
@@ -165,7 +165,7 @@ TVAR:
 ; ****************************************************************************
 ; Blink the LEDs on the floppies to tell the user we're alive
 blink_leds:
-	mov ax, As6500			; address the floppy 
+	mov ax, Seg6500			; address the floppy
 	mov es, ax
 
 	mov byte [es:Via6OraIra], (F_led0+F_led1)	; turn both LEDs on

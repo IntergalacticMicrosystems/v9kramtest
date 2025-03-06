@@ -108,12 +108,19 @@ InvScreenRAM	equ	4000			; Offset of unused portion of MDA/CGA video RAM
 
 
 
-SegExtraIo      equ 0E000h
-
-PicPort0        equ 00h             ; Programmable Interrupt Controller
+SegPic          equ 0E000h          ; Programmable Interrupt Controller
+PicPort0        equ 00h
 PicPort1        equ 01h
 
-As6500          equ 0E800h          ; I/O port for 6500 (CRT and floppy)
+SegBrt          equ 0E002h          ; Baud rate controller
+
+SegSerial       equ 0E004h          ; uP D7201 Serial Communications Controller
+SerAData        equ 00h
+SerBData        equ 01h
+SerACtl         equ 02h
+SerBCtl         equ 03h
+
+Seg6500         equ 0E800h          ; I/O port for 6500 (CRT and floppy)
 CrtRg0          equ 00h
 CrtRg1          equ 01h
 CodecClk        equ 84h
@@ -123,6 +130,10 @@ Volume          equ 2Ah
 VolumeCtl       equ 2Bh
 VolumeClk       equ 28h
 Via6OraIra      equ 0CFh
+
+SegKeyb6522     equ 0E804h          ; Keyboard 6255
+
+SegUser6522     equ 0E808h          ; User port 6522
 
 ScreenRam       equ 0F000h          ; Segment of screen RAM
 FE_Ioport       equ 0FFFFh          ; Port to tell field service what's wrong

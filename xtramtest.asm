@@ -3,7 +3,7 @@
 
 ; ************************************************************************************************
 %include "defines.inc"
- 
+
 [map all xtramtest.map]
 
 ; START		equ	0E000h
@@ -63,6 +63,9 @@ title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
 			db	byline_attr,  0,  3, "by Dave Giller - with Adrian Black - https://youtube.com/@AdriansDigitalBasement", 0
 			db	0
 
+rdy:		db "READY", 0dh, 0ah
+rdylen:		equ $-rdy
+
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
@@ -80,7 +83,7 @@ DiagStart:
 ; ************************************************************************************************
 ; Initialization modules
 	%include "010_cold_boot.inc"
-	%include "030_video.inc"
+	;%include "030_video.inc"
 	%include "050_beep.inc"
 	%include "060_vram.inc"
 
@@ -115,11 +118,11 @@ section .resetvec ; MARK: __ .resetvec __
 PowerOn:
 	jmp	BASESEG:cold_boot	; CS will be 0F000h
 
- 
+
 S_FFF5:
 	db __DATE__		; Assembled date (YYYY-MM-DD)
 	db 0			; space for checksum byte
-	
+
 
 section .rwdata
 	rwdata_end:

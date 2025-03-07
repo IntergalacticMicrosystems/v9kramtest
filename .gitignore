@@ -1,5 +1,7 @@
 *.8k
 *.32k
+*.hex
+*.bin
 *.lst
 *.map
 *.debug

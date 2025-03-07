@@ -4,7 +4,7 @@
 ; ************************************************************************************************
 %include "defines.inc"
 
-[map all xtramtest.map]
+[map all v9kramtest.map]
 
 ; START		equ	0E000h
 ; RESET		equ	0FFF0h

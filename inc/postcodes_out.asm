@@ -52,11 +52,11 @@ CheckpointStack:
 	mov	bp,ax
 
 	; Send a CRLF sequence.
-	call	SendCrlfToCom1	; ( Destroys: AX, DX )
+	;call	SendCrlfToCom1	; ( Destroys: AX, DX )
 
 	; Send the byte as two ASCII bytes.
 	mov	ax,bp			; Get the byte to send back into AL.
-	call	SendAlToCom1Ascii	; ( Destroys: AX, BP, BX, CL, DX )
+	;call	SendAlToCom1Ascii	; ( Destroys: AX, BP, BX, CL, DX )
 %endif
 
 	;------------------------

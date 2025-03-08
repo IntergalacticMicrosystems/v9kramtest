@@ -11,22 +11,22 @@ section_restore
 ; ---------------------------------------------------------------------------
 
 CheckVideoRAM:
-	__CHECKPOINT__NOSTACK__ 0x0F
+	__CHECKPOINT__NOSTACK__ 0x0B
 ; ****************************************************************************
 ; From here on, we need RAM for variables and for the stack.
 ;
 ; If any of those found, set ES to it.
 ; If none found, send checkpoint 8A then halt the CPU.
 
-	mov	ax,ScreenRam
-	mov	es,ax
+	mov	ax, ScreenRam
+	mov	es, ax
 	mov	word [es:0],0720h	; Try one address for the moment.
 	nop				; Delay for I/O.
 	nop				; Delay for I/O.
 	cmp	word [es:0],0720h	; Read it, the same value?
 	jne	NOVID			; --> if no
 
-	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
+	__CHECKPOINT__NOSTACK__ 0x0C ;++++++++++++++++++++++++++++++++++++++++
 
 	jmp	CVREXIT			; -->
 
@@ -36,25 +36,8 @@ NOVID:
 ; No MDA/CGA/A0000 video RAM found.
 ; ----------------------------------------------------------------------------
 
-	__CHECKPOINT__NOSTACK__ 0x8A ;++++++++++++++++++++++++++++++++++++++++
+	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
 
-%ifdef USE_SERIAL
-	; Send '8A' to the COM1 port (i.e. I/O port 3F8h).
-	mov	dx,COM1_lsr	; Line status register (LSR).
-.L66:	in	al,dx
-	and	al,00100000b
-	jz	.L66		; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'8'
-	out	dx,al
-	mov	dx,COM1_lsr	; Line status register (LSR).
-.L77:	in	al,dx
-	and	al,00100000b
-	jz	.L77		; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'A'
-	out	dx,al
-%endif
 	; Halt the CPU.
 	cli
 	hlt
@@ -104,54 +87,23 @@ TVAR:
 ;   A0000: Failure of the 96 bytes at offset 4000h within the RAM.
 ; ----------------------------------------------------------------------------
 
-	__CHECKPOINT__NOSTACK__ 0x8D ;++++++++++++++++++++++++++++++++++++++++
+	__CHECKPOINT__NOSTACK__ 0x0E ;++++++++++++++++++++++++++++++++++++++++
 
-	; Send '8D' to the COM1 port (i.e. I/O port 3F8h).
-%ifdef USE_SERIAL
-	mov	dx,COM1_lsr		; Line status register (LSR).
-.L66:	in	al,dx
-	and	al,00100000b
-	jz	.L66			; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'8'
-	out	dx,al
-	mov	dx,COM1_lsr		; Line status register (LSR).
-.L77:	in	al,dx
-	and	al,00100000b
-	jz	.L77			; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'D'
-	out	dx,al
-%endif
-%if 0
-	; Display "Test of video RAM failed. Aborting.  <-----"
-	mov	si,TxtVrtf
-	mov	di,482			; DI := starting postion of text (offset into MDA/CGA video RAM)
-	mov	ax,SegCgaRam
-	mov	es,ax			; Point ES to segment address of MDA video RAM
-	mov	ah,07h			; Char attribute = normal
-.L40:	mov	al,[cs:si]		; Read character
-	inc	si
-	and	al,al			; End of the text?
-	jz	.S40			; --> if yes
-	stosw				; Write character plus attribute { STOSW: AX-->[ES:DI], then DI=DI+2 }
-	jmp	.L40			; -->
-%endif
 	; Halt the CPU
-.S40:	cli
+	cli
 	hlt
 
 
-.PASS:	;------------------------
+.PASS:	
+	;------------------------
 	; Test successful.
 	; -----------------------
 	; MDA/CGA: Set the stack top to near the top of video RAM.
 	;   A0000: Set the stack top at 4094 bytes into RAM.
 
-	mov	ax,es
-	mov	ss,ax			; SS = ES = segment address of video RAM (either MDA or CGA or A0000).
-	; mov	sp,OurSpAddress-2	; 4094
-	mov	sp,OurSpAddress		; 4096
+	mov	ax, es
+	mov	ss, ax				; SS = ES = segment address of video RAM (either MDA or CGA or A0000).
+	mov	sp, OurSpAddress	; 4095
 
 
 
@@ -160,7 +112,7 @@ TVAR:
 ; Info:	We now have a stack. Therefore, we can now use '__CHECKPOINT__' (uses the stack) instead
 ;	of '__CHECKPOINT__NOSTACK__' (does not use the stack). This will reduce the amount of code.
 
-	__CHECKPOINT__ 0x0E ;++++++++++++++++++++++++++++++++++++++++
+	__CHECKPOINT__ 0x0F ;++++++++++++++++++++++++++++++++++++++++
 
 ; ****************************************************************************
 ; Blink the LEDs on the floppies to tell the user we're alive
@@ -170,7 +122,7 @@ blink_leds:
 
 	mov byte [es:Via6OraIra], (F_led0+F_led1)	; turn both LEDs on
 	mov ax, 5000			; wait half a second
-	;call time
+	call Time
 
 	and byte [es:Via6OraIra], ~(F_led0+F_led1)	; trun LEDs off
 

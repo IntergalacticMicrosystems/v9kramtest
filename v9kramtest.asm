@@ -33,6 +33,7 @@ rwdata_start:
 %define first_segment 0
 %define num_segments 40
 %define bytes_per_segment 0x4000
+%define USE_SERIAL 1
 
 ; ---------------------------------------------------------------------------
 section .rwdata ; MARK: __ .rwdata __
@@ -54,17 +55,15 @@ byline_attr	equ	02h
 
 title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
 			db 	title_attr,   1,  1
-		title_only:	db	"XTRAMTEST ", 0
+title_only:	db	"V9KRAMTEST ", 0
 			db	subtitle_attr, 11, 1
 			%include "version.inc"
 			db " (", __DATE__, ")", 0
 			; db 0
-			db	title_attr,  54,  1, "github.com/ki3v/xtramtest", 0
-			db	byline_attr,  0,  3, "by Dave Giller - with Adrian Black - https://youtube.com/@AdriansDigitalBasement", 0
+			db	title_attr,  54,  1, "github.com/freitz85/v9kramtest.git", 0
+			db	byline_attr,  0,  3, "based on XTRAMTEST by Dave Giller", 0
 			db	0
-
-rdy:		db "READY", 0dh, 0ah
-rdylen:		equ $-rdy
+title_rdy:	db "V9KRAMTEST READY", 0dh, 0ah, 0
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
@@ -84,7 +83,7 @@ DiagStart:
 ; Initialization modules
 	%include "010_cold_boot.inc"
 	;%include "030_video.inc"
-	%include "050_beep.inc"
+	;%include "050_beep.inc"
 	%include "060_vram.inc"
 
 ; MARK: DiagLoop
@@ -108,6 +107,9 @@ DiagLoop:
 	%include "ram_bitpat.asm"
 	jmp	DiagLoop
 
+
+Tbl_ASCII:
+	db '0123456789ABCDEF'
 
 ;------------------------------------------------------------------------------
 ; Power-On Entry Point

@@ -24,7 +24,7 @@ cold_boot:
 	rep stosw
 
 	cmp ax, 0				; done?
-	jz  .init_pic
+	jz  init_pic
 
 	xor di, di				; compare starting at offset 0
 	mov cx, 2048
@@ -46,7 +46,7 @@ cold_boot:
 	out dx, al				; issue the error for FE scoping
 	jmp .error_display		; that's all folks
 
-.init_pic:					; initialize Intel 8259 PIC
+init_pic:					; initialize Intel 8259 PIC
 	mov ax, SegPic
 	mov es, ax				; address the memory-mapped I/O
 
@@ -63,22 +63,9 @@ cold_boot:
 	loop .cl1				; clear all ISR bits
 
 ;
-;	blink the LEDs on the floppies to tell the user we're alive
-;
-	mov ax, Seg6500			; address the floppy registers
-	mov	es, ax
-
-	mov	byte [es:Via6OraIra], F_led0+F_led1	; turn both leds on
-
-	mov cx, 5000h			; wait a half second
-	loop $
-
-	and	byte [es:Via6OraIra], ~(F_led0+F_led1)	; reset the leds
-
-;
 ;	Initialize serial port
 ;
-.ser_init:
+ser_init:
 	mov ax, SegSerial			; address the serial controller
 	mov es, ax
 	mov byte al, [es:SerACtl]
@@ -114,7 +101,7 @@ cold_boot:
 	mov ax, SegBrt				; 8253 baud rate controller
 	mov es, ax
 	mov byte [es:3], 36h
-	mov byte [es:0], 8			; 9600 Bd
+	mov byte [es:0], 4			; 19200 Bd
 	mov byte [es:0], 0
 
 	mov ax, SegSerial
@@ -123,18 +110,19 @@ cold_boot:
 	mov byte [es:SerACtl], 30h	; reset error
 
 ;
-;	print READY on serial
+;	print title on serial
 ;
-	mov cx, rdylen
-	mov bx, rdy
-
-.print_loop:
-	mov al, [cs:bx]
+print_title:
+	mov si, title_rdy
+.L10:
+	mov al, [cs:si]
+	and al, al					; end of text?
+	jz .S10
 	mov [es:SerAData], al
-.flush:
+.L20:
 	test byte [es:SerACtl], 4	; wait for byte to transmit
-	jz .flush
-
-	inc bx
-	loop .print_loop
-
+	jz .L20
+	inc si
+	jmp .L10
+.S10:
+	

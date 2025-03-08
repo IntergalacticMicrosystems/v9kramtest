@@ -84,9 +84,6 @@ FdcCdr0		equ	3F5h		; Command/Data Register 0
 SegMdaRam	equ	0B000h
 SegCgaRam	equ	0B800h
 
-; OurSpAddress	equ	4094		; What we will set the stack pointer to.
-OurSpAddress	equ	1000h		; What we will set the stack pointer to.
-
 BrCornerOffset	equ	3940		; Screen offset at bottom right corner where a segment:offset gets displayed.
 
 
@@ -136,6 +133,8 @@ SegKeyb6522     equ 0E804h          ; Keyboard 6255
 SegUser6522     equ 0E808h          ; User port 6522
 
 ScreenRam       equ 0F000h          ; Segment of screen RAM
+OurSpAddress	equ	0FFFh		    ; What we will set the stack pointer to.
+
 FE_Ioport       equ 0FFFFh          ; Port to tell field service what's wrong
 
 FE_screen	    equ	01h             ; FE error unreproducable screen ram error

@@ -83,33 +83,29 @@
 	; Therefore, to shorten the code (important for this 8 KB sized ROM), only the LS nibble is processed.
 	; -----------------------
 
-	; cmp	al,10h
-	; jge	%%EXIT		; --> if 10h or greater.
-	mov	ah,al		; Save the byte for later.
+	mov	bl, al					; Save the byte for later.
+	mov	bx, SegSerial
+	mov es, bx
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
-	mov	dx,COM1_lsr	; Line status register (LSR).
-%%L10:	in	al,dx
-	and	al,00100000b
-	jz	%%L10		; --> if UART is not ready.
+%%L10:	
+	test byte [es:SerACtl], 4	; wait for byte empty
+	jz	%%L10					; --> if UART is not ready.
 
 	; Output an ASCII space.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,' '
-	out	dx,al
+	mov	al, ' '
+	mov [es:SerAData], al
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
-	mov	dx,COM1_lsr	; Line status register (LSR).
-%%L20:	in	al,dx
-	and	al,00100000b
-	jz	%%L20		; --> if UART is not ready.
+%%L20:	
+	test byte [es:SerACtl], 4	; wait for byte empty
+	jz	%%L20					; --> if UART is not ready.
 
 	; Ouput the LS nibble.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,ah		; Get the byte to send, back into AL.
-	mov	bx,Tbl_ASCII
-	xlatb			; Convert AL into ASCII.
-	out	dx,al		; Output it.
+	mov	al, bl					; Get the byte to send, back into AL.
+	mov	bx, Tbl_ASCII
+	xlatb						; Convert AL into ASCII.
+	mov [es:SerAData], al
 %endif
 %endif
 

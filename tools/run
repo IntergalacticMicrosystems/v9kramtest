@@ -8,18 +8,21 @@ $BASE/build || exit -1
 # 	DEBUG='-debug'
 # fi
 
-RAM=${RAM:-256K}
-VIDEO=${VIDEO:-cga}
-# HARDWARE='-isa1 mda'
-# HARDWARE='-isa1 vga'
+F=v9kramtest
+FE_NAME="v9000 univ. fe f3f7 13db.7j"
+FF_NAME="v9000 univ. ff f3f7 39fe.8j"
+ROMS="$HOME/.mame/roms"
 
-MOPTS="ibm5160 -isa1 $VIDEO -bios rev1 -ramsize $RAM"
-VOPTS="-window -resolution 1280x800 -nofilter -nokeepaspect"
-ROPTS="-skip_gameinfo -cheat -uimodekey END -nomouse -volume -20"
-DOPTS="-debugger_font 'JetBrains-Mono' -debugger_font_size 14 -update_in_pause"
-# LOPTS="-autoboot_script mamedebug.lua"
-COPTS="-debugscript xtramtest.debug"
+RAM=${RAM:-256K}
+
+MOPTS="victor9k -ramsize $RAM"
+VOPTS="-window -resolution 800x600 -nofilter -nokeepaspect"
+SOPTS="-rs232a null_modem -bitb socket.localhost:7201"
+ROPTS="-skip_gameinfo -cheat -nomouse -volume -20"
+DOPTS="-debug -update_in_pause -debugscript $F.debug"
 
 set -x
-rm -f comments/ibm5160.cmt
-mame $MOPTS -rompath ./roms $ROPTS $DOPTS $VOPTS $COPTS $LOPTS $*
+rm -f comments/victor9k.cmt
+cp "$F"_FE.bin ~/.mame/roms/victor9k/"$FE_NAME"
+cp "$F"_FF.bin ~/.mame/roms/victor9k/"$FF_NAME"
+mame $MOPTS -rompath $ROMS $ROPTS $DOPTS $VOPTS $SOPTS $*

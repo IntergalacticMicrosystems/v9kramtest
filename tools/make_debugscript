@@ -3,7 +3,10 @@ use strict;
 use Data::Dumper;
 # use Antsy qw(:all);
 
+my $BASEADDR = 0xFE000;
+
 my $break = join( "|", split( / /, $ENV{BREAK} ) );
+# warn "break = $break\n";
 my $reBreak = qr/$break/;
 my $reNoScan = qr/data$/;
 
@@ -66,14 +69,23 @@ for $section ( sort keys %SYM ) {
 	my $first = $syms[0]->{addr};
 
 	for my $sym ( @syms ) {
-		my $linear = $sym->{addr} + 0xF0000;
-		$COMMENTS{$linear} .= $sym->{sym} . ": ";
+		my $linear = $sym->{addr} + $BASEADDR;
+		my $label = $sym->{sym};
+		$label =~ s/^.*?[.]/./;
+
+		# $COMMENTS{$linear} .= $sym->{sym} . ": ";
+		$COMMENTS{$linear} .= $label . ": ";
 		# printf "comadd %X, %s:\n", $linear, $sym->{sym};
 		if ( $sym->{sym} =~ m/^$reBreak$/ ) {
 			$BREAKPOINTS{$linear} = 1;
 			# printf "bps %X\n", $linear;
 		}
 	}
+}
+
+# also break on explicit addresses
+for my $addr ( split( / /, $ENV{BREAK} ) ) {
+	$BREAKPOINTS{hex( $addr )} = 1 if $addr =~ m/^(0x)?[0-9a-f]+$/i;
 }
 
 print "\n\n";
@@ -177,7 +189,7 @@ while (<$fh>) {
 
 		if ( $emitted ) {
 			set_pos hex( $l{addr} ) + cur_sect->{start};
-			my $pos = cur_pos + 0xF0000;
+			my $pos = cur_pos + $BASEADDR;
 			# warn sprintf "%-9.9s %05X %s\n", cur_sect->{name}, $pos, $l{source};
 
 			if ( $l{source} !~ m/^\s*$/ ) {
@@ -202,7 +214,7 @@ for my $addr ( sort keys %COMMENTS ) {
 for my $addr ( sort keys %BREAKPOINTS ) {
 	printf "bps %X\n", $addr;
 }
-
+printf "go\n" if scalar %BREAKPOINTS;
 
 # open my $lsymfh, ">", $lsym or die "couldn't open $lsym: $!";
 

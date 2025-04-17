@@ -63,7 +63,6 @@ title_only:	db	"V9KRAMTEST ", 0
 			db	title_attr,  54,  1, "github.com/freitz85/v9kramtest.git", 0
 			db	byline_attr,  0,  3, "based on XTRAMTEST by Dave Giller", 0
 			db	0
-title_rdy:	db "V9KRAMTEST READY", 0dh, 0ah, 0
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __

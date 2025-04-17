@@ -21,7 +21,7 @@ $BASE/size $F.map
 # $BASE/makerom $F.bin > $F.32k || exit -1
 
 # set up a debugscript with breakpoints
-#$BASE/make_debugscript $F.map > $F.debug || exit -1
+$BASE/make_debugscript $F.map > $F.debug || exit -1
 # sha1sum $F.32k
 set +x
 echo

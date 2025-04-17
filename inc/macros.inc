@@ -84,8 +84,8 @@
 	; -----------------------
 
 	mov	bl, al					; Save the byte for later.
-	mov	bx, SegSerial
-	mov es, bx
+	mov	ax, SegSerial
+	mov es, ax
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
 %%L10:	

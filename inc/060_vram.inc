@@ -58,6 +58,8 @@ TVAR:
 ;
 ; Test the 96 bytes. If that test fails, halt the CPU.
 
+	mov	ax, ScreenRam
+	mov	es, ax
 	mov	ax,0FFFFh		; First test data pattern
 
 .L16:	; Fill 96 bytes with test data.

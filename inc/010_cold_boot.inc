@@ -13,7 +13,8 @@ section_restore
 cold_boot:
 
 ; 	Adapted from Victor 9000 ROM
-
+	mov ax, cs					; set data segment to boot rom
+	mov ds, ax
 	mov ax, Seg6500				; access CRT controller
 	mov es, ax
 	mov byte [es:CrtRg0], 1

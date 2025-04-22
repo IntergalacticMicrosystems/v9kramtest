@@ -63,7 +63,9 @@ title_only:	db	"V9KRAMTEST ", 0
 			db	title_attr,  54,  1, "github.com/freitz85/v9kramtest.git", 0
 			db	byline_attr,  0,  3, "based on XTRAMTEST by Dave Giller", 0
 			db	0
-
+Tbl_ASCII:
+			db '0123456789ABCDEF'
+			db  0
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
@@ -106,9 +108,6 @@ DiagLoop:
 	%include "ram_bitpat.asm"
 	jmp	DiagLoop
 
-
-Tbl_ASCII:
-	db '0123456789ABCDEF'
 
 ;------------------------------------------------------------------------------
 ; Power-On Entry Point

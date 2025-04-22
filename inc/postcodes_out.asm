@@ -52,11 +52,11 @@ CheckpointStack:
 	mov	bp,ax
 
 	; Send a CRLF sequence.
-	;call	SendCrlfToCom1	; ( Destroys: AX, DX )
+	call	SendCrlfToCom1	; ( Destroys: AX, DX )
 
 	; Send the byte as two ASCII bytes.
 	mov	ax,bp			; Get the byte to send back into AL.
-	;call	SendAlToCom1Ascii	; ( Destroys: AX, BP, BX, CL, DX )
+	call	SendAlToCom1Ascii	; ( Destroys: AX, BP, BX, CL, DX )
 %endif
 
 	;------------------------
@@ -65,3 +65,89 @@ CheckpointStack:
 	ret
 
 
+; ****************************************************************************
+; Send a CR/LF/hash sequence to the RS-232 serial port at I/O port 3F8h ('COM1').
+;
+;   INPUTS: {nothing}
+;
+;  OUTPUTS: {nothing}
+;
+; DESTROYS: AX, DX
+;
+; ****************************************************************************
+SendCrlfToCom1:
+
+	mov	al,0Dh		; Carriage return (CR)
+	call	SendAlToCom1Raw	; ( Destroys: AX, DX )
+	mov	al,0Ah		; Line feed (LF)
+	call	SendAlToCom1Raw	; ( Destroys: AX, DX )
+	ret
+
+
+; ****************************************************************************
+; In ASCII form, send the byte in AL to the RS-232 serial port at I/O port 3F8h ('COM1').
+; For example, 8Ah would be converted to two bytes: 38h for the '8' followed by 42h for the 'A'.
+;
+;   INPUTS: AL contains the byte/code to output.
+;
+; REQUIREMENT: For XLATB, DS is set to the CS (where Tbl_ASCII is). This is normally the case in this program.
+;
+;  OUTPUTS: {nothing}
+;
+; DESTROYS: AX, BP, BX, CL, DX
+;
+; ****************************************************************************
+SendAlToCom1Ascii:
+
+	; Save the passed byte for later.
+	mov	bp,ax
+
+	; Send the first byte; the high nibble of the passed byte.
+	mov	cl,4
+	shr	al,cl		; High nibble to low nibble.
+	mov	bx,Tbl_ASCII
+	xlatb			; Convert AL into ASCII.
+	call	SendAlToCom1Raw	; ( Destroys: AX, DX )
+
+	; Send the second byte; the low nibble of the passed byte.
+	mov	ax,bp		; Get the passed byte back.
+	and	al,0Fh		; AL only has low nibble of passed AL.
+	mov	bx,Tbl_ASCII
+	xlatb			; Convert AL into ASCII.
+	call	SendAlToCom1Raw	; ( Destroys: AX, DX )
+
+	; Return to caller.
+.EXIT	ret
+
+
+; ****************************************************************************
+; In RAW form, send the byte in AL to the RS-232 serial port at I/O port 3F8h ('COM1').
+;
+;   INPUTS: AL contains the byte/code to output.
+;
+;  OUTPUTS: {nothing}
+;
+; DESTROYS: AX, BX
+;
+; ****************************************************************************
+SendAlToCom1Raw:
+
+	mov	bl, al					; Save the byte for later.
+	push es						; Save ES
+	mov	ax, SegSerial
+	mov es, ax
+
+	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
+.L10:	
+%ifndef MAME
+	test byte [es:SerACtl], 4	; wait for byte empty
+	jz	.L10					; --> if UART is not ready.
+%endif
+
+	; Send the byte.
+	mov	al, bl					; Get the byte to send, back into AL.
+	mov [es:SerAData], al
+
+	; Return to caller.
+	pop es						; restore ES
+.EXIT	ret

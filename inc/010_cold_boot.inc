@@ -130,8 +130,10 @@ print_title:
 	jz .S10
 	mov [es:SerAData], al
 .L20:
+%ifndef MAME
 	test byte [es:SerACtl], 4	; wait for byte to transmit
 	jz .L20
+%endif
 	inc si
 	jmp .L10
 .S10:

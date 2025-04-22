@@ -1,6 +1,6 @@
 #!/bin/bash
 BASE=`dirname $0`
-$BASE/build || exit -1
+$BASE/build -dMAME || exit -1
 
 # if [ "x$DEBUG" == "x" ]; then
 # 	DEBUG=''

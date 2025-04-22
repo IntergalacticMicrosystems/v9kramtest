@@ -89,8 +89,10 @@
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
 %%L10:	
+%ifndef MAME
 	test byte [es:SerACtl], 4	; wait for byte empty
 	jz	%%L10					; --> if UART is not ready.
+%endif
 
 	; Output an ASCII space.
 	mov	al, ' '
@@ -98,8 +100,10 @@
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
 %%L20:	
+%ifndef MAME
 	test byte [es:SerACtl], 4	; wait for byte empty
 	jz	%%L20					; --> if UART is not ready.
+%endif
 
 	; Ouput the LS nibble.
 	mov	al, bl					; Get the byte to send, back into AL.

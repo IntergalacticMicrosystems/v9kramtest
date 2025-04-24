@@ -139,10 +139,6 @@ startseg:
 		mov	al, ah
 		call	scr_goto_seg
 
-		mov	[ss:scrAttr], byte scr_arrow_attr
-		mov	al, 10h
-		call	scr_putc
-
 		call	scr_get_hex	; get the byte value of the hex digits at that screen location
 		mov	dh, ah		; save the error bits
 
@@ -163,7 +159,6 @@ endseg:
 		mov	al, ah
 		call	scr_goto_seg	; position the cursor for the report for this segment
 
-		mov	[ss:scrAttr], byte scr_arrow_attr
 		mov	al, " "
 		call	scr_putc
 
@@ -171,17 +166,16 @@ endseg:
 		jz	.ok
 
 	.err:	
-		mov	[ss:scrAttr], byte scr_err_attr
 		mov	ah, dh
 		call	scr_put_hex_ah	; print the error bits
 		jmp 	.done
 
-	.ok:	mov	[ss:scrAttr], byte scr_ok_attr
+	.ok:
 		mov	al, '-'
 		call	scr_putc
 		call	scr_putc
 
-	.done:	mov	[ss:scrAttr], byte scr_arrow_attr
+	.done:
 		mov	al, " "
 		call	scr_putc
 		

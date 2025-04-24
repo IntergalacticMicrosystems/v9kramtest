@@ -47,21 +47,16 @@ section .rwdata ; MARK: __ .rwdata __
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
 
-; title_attr	equ	1Fh
-title_attr	equ	0Fh
-; title_attr	equ	71h
-subtitle_attr	equ	07h
-byline_attr	equ	02h
 
-title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
-			db 	title_attr,   1,  1
-title_only:	db	"V9KRAMTEST ", 0
-			db	subtitle_attr, 11, 1
-			%include "version.inc"
+title_text: ; x, y, text, 0 (terminate with 0 for attr)
+			db 	1,  1
+			db	"V9KRAMTEST ", 0
+			db	12, 1
+			;%include "version.inc"
 			db " (", __DATE__, ")", 0
 			; db 0
-			db	title_attr,  54,  1, "github.com/freitz85/v9kramtest.git", 0
-			db	byline_attr,  0,  3, "based on XTRAMTEST by Dave Giller", 0
+			db	46,  1, "github.com/freitz85/v9kramtest.git", 0
+			db	4,  3, "by Florian Reitz - based on XTRAMTEST by Dave Giller", 0
 			db	0
 Tbl_ASCII:
 			db '0123456789ABCDEF'
@@ -73,6 +68,7 @@ section .lib ; MARK: __ .lib __
 ; procedures to include in the ROM
 %include "delay.asm"
 %include "postcodes_out.asm"
+%include "serial.asm"
 
 ; ---------------------------------------------------------------------------
 section .text ; MARK: __ .text __
@@ -87,12 +83,13 @@ DiagStart:
 	;%include "050_beep.inc"
 	%include "060_vram.inc"
 
+	__CHECKPOINT__ 0x10 ;++++++++++++++++++++++++++++++++++++++++
+
 ; MARK: DiagLoop
 DiagLoop:
 ; ************************************************************************************************
 ; MAIN DIAGNOSTIC LOOP
 ; ************************************************************************************************
-	__CHECKPOINT__ 0x10 ;++++++++++++++++++++++++++++++++++++++++
 
 	; Disable maskable interrupts, and set the direction flag to increment.
 	cli
@@ -104,9 +101,10 @@ DiagLoop:
 	%include "screen.asm"
 
 	%include "ram_common.asm"
-	%include "ram_marchu.asm"
-	%include "ram_bitpat.asm"
-	jmp	DiagLoop
+	;%include "ram_marchu.asm"
+	;%include "ram_bitpat.asm"
+	;jmp	DiagLoop
+	hlt
 
 
 ;------------------------------------------------------------------------------

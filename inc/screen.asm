@@ -10,8 +10,7 @@ section_save
 section .rwdata ; MARK: __ .rwdata __
 ; ---------------------------------------------------------------------------
 
-	scrPos		dw	?	; pointer to current cursor position in screen memory
-	scrAttr		db 	?	; current attribute for printing
+    scrPos		dw	?	; pointer to current cursor position in screen memory
 
 	test_label	dw	?	; test label
 	test_num	db	?	; test number
@@ -24,32 +23,26 @@ section .romdata ; MARK: __ .romdata __
 y_grid_start	equ	7
 x_grid_start	equ	7
 x_grid_loffs	equ	6
-; grid_head_attr	equ	30h
-; grid_head_attr	equ	09h
-grid_head_attr	equ	13h
-; grid_seg_attr	equ	03h
-grid_seg_attr	equ	13h
-grid_k_attr	equ	07h
 
 y_grid_end	equ	y_grid_start+8
 
+scr_reverse_cmd		asciiz	1Bh,"[7;2m"
+scr_normal_cmd		asciiz	1Bh,"[m"
 scr_grid_header		asciiz	"Addrs  EM  EB"
 scr_grid_space		asciiz	"   "
-x_k_start		equ	x_grid_start-x_grid_loffs+1
-scr_k_labels		db 	grid_k_attr, x_k_start,    y_grid_start+ 5, " 64K", 0
-			db 	grid_k_attr, x_k_start,    y_grid_start+10, "128K", 0
-			db 	grid_k_attr, x_k_start+16, y_grid_start+ 5, "192K", 0
-			db 	grid_k_attr, x_k_start+16, y_grid_start+10, "256K", 0
-			db 	grid_k_attr, x_k_start+32, y_grid_start+ 5, "320K", 0
-			db 	grid_k_attr, x_k_start+32, y_grid_start+10, "384K", 0
-			db 	grid_k_attr, x_k_start+48, y_grid_start+ 5, "448K", 0
-			db 	grid_k_attr, x_k_start+48, y_grid_start+10, "512K", 0
-			db 	grid_k_attr, x_k_start+64, y_grid_start+ 5, "576K", 0
-			db 	grid_k_attr, x_k_start+64, y_grid_start+10, "640K", 0
+x_k_start		equ 2
+scr_k_labels		db 	x_k_start,    y_grid_start+ 5, " 64K", 0
+			db 	x_k_start,    y_grid_start+10, "128K", 0
+			db 	x_k_start+16, y_grid_start+ 5, "192K", 0
+			db 	x_k_start+16, y_grid_start+10, "256K", 0
+			db 	x_k_start+32, y_grid_start+ 5, "320K", 0
+			db 	x_k_start+32, y_grid_start+10, "384K", 0
+			db 	x_k_start+48, y_grid_start+ 5, "448K", 0
+			db 	x_k_start+48, y_grid_start+10, "512K", 0
+			db 	x_k_start+64, y_grid_start+ 5, "576K", 0
+			db 	x_k_start+64, y_grid_start+10, "640K", 0
 			db	0 ; end
 
-scr_test_normal_attr	equ	0x07
-scr_test_header_attr	equ	0x0F
 scr_test_header_xy:	equ	0x0502
 scr_test_header:	asciiz	"Pass "
 scr_test_separator:	asciiz	": "
@@ -57,17 +50,12 @@ scr_label_march:	asciiz	"March-U "
 scr_label_bit:		asciiz	"Bus Exercise "
 
 scr_sep_line		equ	2
-scr_sep_char		equ	0xC4
-scr_sep_attr		equ	0x02
-
-scr_err_attr		equ	0x0C
-scr_ok_attr		equ	0x07
-scr_arrow_attr		equ	0x0A
+scr_sep_char		equ	'-'
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
-
+%if 0
 scr_get_hex: ; MARK: scr_get_hex
 ; get the byte value of two hex digits from the screen
 ; inputs:
@@ -533,7 +521,7 @@ scr_goto_seg:
 	pop	dx
 	pop	ax
 	ret
-
+%endif
 
 ; MARK: draw_ram_headers
 ; ---------------------------------------------------------------------------
@@ -550,25 +538,26 @@ draw_ram_headers:
 
 	mov	cx, 5
 .hloop:	
-	mov	ah, grid_head_attr
-	call	scr_set_attr
+	mov	si, scr_reverse_cmd
+	call	scr_puts
 	mov	si, scr_grid_header	; print the header
 	call	scr_puts
-	mov	ah, 07h
-	call	scr_set_attr
+	mov	si, scr_normal_cmd
+	call	scr_puts
 	mov	si, scr_grid_space	; print the space
 	call	scr_puts
 	loop	.hloop
 
-	mov	ah, grid_seg_attr
-	call	scr_set_attr
-
 	; now print the block labels
+	mov	si, scr_reverse_cmd
+	call	scr_puts
 	mov	cx, 40			; 16 address labels
 	mov	al, 0			; segment counter
 .lloop:	
 	call	scr_goto_seg
-	sub	byte [ss:scrPos], x_grid_loffs*2	; go back for label
+	call    scr_getxy
+	sub dl, x_grid_loffs	; go back for label
+	call	scr_goto
 	mov	ah, al
 	call	scr_put_hex_ah
 	mov	al, '-'		; print the dash
@@ -579,7 +568,10 @@ draw_ram_headers:
 	inc	al
 	loop	.lloop
 
-.klabs:	mov	si, scr_k_labels
+.klabs:	
+	mov	si, scr_normal_cmd
+	call	scr_puts
+	mov	si, scr_k_labels
 	call	scr_puts_labels
 
 	pop	es
@@ -595,37 +587,16 @@ section_restore ; MARK: __ restore __
 
 draw_screen:
 	mov 	[ss:test_offset], byte 0
+	call	scr_clear
 
-	xor	dx, dx
-	call	scr_goto
-	mov	ah, title_attr
-	call	scr_set_attr
-	call	scr_clear_line
-	inc	dl
-	; mov	ah, 17h			; white on blue
-	; call	scr_set_attr
-	; call	scr_clear_line
 	mov	si, title_text
 	call	scr_puts_labels
-
-	mov	ah, scr_sep_attr
-	call	scr_set_attr
 
 	mov	dh, 4
 	xor	dl, dl
 	call	scr_goto
 	mov	al, scr_sep_char
 	call	scr_fill_line
-
-; 	mov	ah, 0Ah			; bright green on black
-; 	mov	dx, 1800h
-; 	mov	cx, 4
-; .loop:	
-; 	call	scr_goto
-; 	mov 	ah, dh
-; 	call	scr_put_hex_ah
-; 	dec	dh
-; 	loop	.loop
 
 	call	draw_ram_headers
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 BASE=`dirname $0`
-$BASE/build -dMAME || exit -1
+$BASE/build || exit -1
 
 # if [ "x$DEBUG" == "x" ]; then
 # 	DEBUG=''
@@ -16,8 +16,9 @@ ROMS="$HOME/.mame/roms"
 RAM=${RAM:-256K}
 
 MOPTS="victor9k -ramsize $RAM"
-VOPTS="-window -resolution 800x600 -nofilter -nokeepaspect"
-SOPTS="-rs232a null_modem -bitb socket.localhost:7201"
+VOPTS="-window -resolution 800x600 -nokeepaspect"
+SOPTS="-rs232a pty"
+#SOPTS="-rs232a null_modem -bitb socket.localhost:7201"
 ROPTS="-skip_gameinfo -cheat -nomouse -volume -20"
 DOPTS="-debug -update_in_pause -debugscript $F.debug"
 

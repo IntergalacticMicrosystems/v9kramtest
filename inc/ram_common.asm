@@ -139,12 +139,11 @@ startseg:
 		mov	al, ah
 		call	scr_goto_seg
 
+		mov	al, '>'
+		call	scr_putc
+
 		call	scr_get_hex	; get the byte value of the hex digits at that screen location
 		mov	dh, ah		; save the error bits
-
-		add	[ss:scrPos], word 4
-		mov	al, 11h
-		call	scr_putc
 
 		pop	ax
 		xor	ah, ah		; clear the error bits for the next test

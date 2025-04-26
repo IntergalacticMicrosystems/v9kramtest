@@ -331,6 +331,42 @@ scr_fill_line:
 	ret
 
 
+; MARK: scr_test_announce
+scr_test_announce:
+	push	ax
+	push	dx
+	push	si
+	push	ds
+
+	push	cs			; we get strings from the ROM in CS
+	pop	ds
+
+	mov	dx, scr_test_header_xy
+	call	scr_goto
+	call	scr_clear_line
+	call	scr_goto
+	mov	si, scr_test_header
+	call	scr_puts
+
+	mov	ax, [ss:pass_count]
+	call	scr_put_hex_ax
+
+	mov	si, scr_test_separator
+	call	scr_puts
+
+	mov	si, [ss:test_label]
+	call	scr_puts
+	mov	ah, [ss:test_num]
+
+	call	scr_put_hex_ah
+.skip:
+	pop	ds
+	pop	si
+	pop 	dx
+	pop	ax
+	ret
+
+
 ; MARK: __send_al_bcd
 __send_al_bcd:
 ; input:

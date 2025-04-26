@@ -101,7 +101,7 @@ DiagLoop:
 	%include "screen.asm"
 
 	%include "ram_common.asm"
-	;%include "ram_marchu.asm"
+	%include "ram_marchu.asm"
 	;%include "ram_bitpat.asm"
 	;jmp	DiagLoop
 	hlt

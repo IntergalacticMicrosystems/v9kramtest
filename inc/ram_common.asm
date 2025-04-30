@@ -29,7 +29,7 @@ section .lib ; MARK: __ .lib __
 _do_sim_errors:
 		push	ax
 		push	es
-		
+
 		; _sim_error 0x0C00, 0, 2
 		; _sim_error 0x1000, 0, 0xFE
 		_sim_error 0x0000, 1, 0x80
@@ -38,7 +38,7 @@ _do_sim_errors:
 		pop	ax
 		ret
 %else
-	%define simulate_errors 
+	%define simulate_errors
 %endif
 
 
@@ -134,8 +134,27 @@ ram_test_segment:
 startseg:
 		; XXX - show on the screen that we are starting this segment
 		push	ax
+		push	si
+		push	ds
+		push 	dx		; print the test addresses
+
+		mov	dx, scr_addrs_xy
+		call	scr_goto
 
 		mov	ax, es
+		call	scr_put_hex_ah
+
+		call	scr_getxy
+		add	dl, 5
+		call	scr_goto
+
+		add	ax, 0x0300
+		call	scr_put_hex_ah
+
+		pop	dx
+		pop	ds
+		pop	si
+
 		mov	al, ah
 		call	scr_goto_seg
 
@@ -164,7 +183,7 @@ endseg:
 		or	dh, dh		; any errors?
 		jz	.ok
 
-	.err:	
+	.err:
 		mov	ah, dh
 		call	scr_put_hex_ah	; print the error bits
 		jmp 	.done
@@ -177,7 +196,7 @@ endseg:
 	.done:
 		mov	al, " "
 		call	scr_putc
-		
+
 		pop	ax
 		ret
 

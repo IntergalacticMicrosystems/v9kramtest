@@ -99,7 +99,8 @@ NmiFlag		equ	0404h		; Address = 0000:0404 - Normally 0. NMI handler will set thi
 ; ;-------------------------------------------------------------------------------
 ; ;Variables stored in unused MDA/CGA video RAM, or 4 KB at A0000.
 ; ;-------------------------------------------------------------------------------
-InvScreenRAM	equ	4000			; Offset of unused portion of MDA/CGA video RAM
+rwdata_base	    equ	4000		; Offset of unused portion of MDA/CGA video RAM
+rwdata_init_sp	equ	1000h		; What we will set the stack pointer to.
 
 
 

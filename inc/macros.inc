@@ -58,8 +58,10 @@
 ..@CHECKPOINT_%1:
 	mov	al,%1
 
+%ifdef USE_POSTPORT
 	mov dx, FE_Ioport
 	out dx, al				; issue the error for FE scoping
+%endif
 
 %ifdef USE_LPT
 	;------------------------
@@ -88,7 +90,7 @@
 	mov es, ax
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
-%%L10:	
+%%L10:
 	test byte [es:SerACtl], 4	; wait for byte empty
 	jz	%%L10					; --> if UART is not ready.
 
@@ -97,7 +99,7 @@
 	mov [es:SerAData], al
 
 	; Wait for the COM1 UART to indicate that it is ready for a TX byte.
-%%L20:	
+%%L20:
 	test byte [es:SerACtl], 4	; wait for byte empty
 	jz	%%L20					; --> if UART is not ready.
 

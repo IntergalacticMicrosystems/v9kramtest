@@ -31,9 +31,11 @@ CheckpointStack:
 	out	dx,al
 %endif
 
+%ifdef USE_POSTPORT
 	mov dx, FE_Ioport
 	out dx, al				; issue the error for FE scoping
-	
+%endif
+
 	;--------------------------------------------
 	; Display the byte in the top-right corner of the screen.
 	;--------------------------------------------

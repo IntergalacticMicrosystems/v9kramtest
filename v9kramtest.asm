@@ -26,7 +26,7 @@ section .resetvec 	start=RESET align=1
 
 ; .rwdata section in the unused portion of MDA/CGA video RAM, starting at 4000 DECIMAL - 96 bytes.
 ; variables at the bottom, stack at the top.
-section .rwdata		start=InvScreenRAM align=1 nobits
+section .rwdata		start=rwdata_base align=1 nobits
 rwdata_start:
 
 ; %define num_segments 8
@@ -42,19 +42,16 @@ section .rwdata ; MARK: __ .rwdata __
 ; ---------------------------------------------------------------------------
 	pass_count	dw	?			; The number of passes completed. Incremented by 1 each time a pass is completed.
 
-	do_not_use	equ	InvScreenRAM+38		; Do not use this location. It caused a problem if a Mini G7 video card was used.
+	do_not_use	equ	rwdata_base+38		; Do not use this location. It caused a problem if a Mini G7 video card was used.
 
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
 
+%defstr VERSION_STRING VERSION
 
 title_text: ; x, y, text, 0 (terminate with 0 for attr)
-			db 	1,  1
-			db	"V9KRAMTEST ", 0
-			db	12, 1
-			;%include "version.inc"
-			db " (", __DATE__, ")", 0
-			; db 0
+			db 	1,  1, "V9KRAMTEST ", 0
+			;db	12, 1, VERSION_STRING, " (", __DATE__, ")", 0
 			db	46,  1, "github.com/freitz85/v9kramtest.git", 0
 			db	4,  3, "by Florian Reitz - based on XTRAMTEST by Dave Giller", 0
 			db	0
@@ -69,6 +66,7 @@ section .lib ; MARK: __ .lib __
 %include "delay.asm"
 %include "postcodes_out.asm"
 %include "serial.asm"
+%include "screen.asm"
 
 ; ---------------------------------------------------------------------------
 section .text ; MARK: __ .text __
@@ -85,6 +83,9 @@ DiagStart:
 
 	__CHECKPOINT__ 0x10 ;++++++++++++++++++++++++++++++++++++++++
 
+	call	scr_clear
+	call 	draw_screen
+
 ; MARK: DiagLoop
 DiagLoop:
 ; ************************************************************************************************
@@ -98,7 +99,6 @@ DiagLoop:
 	add	word [ss:pass_count], 1		; Increment the pass count.
 
 	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
-	%include "screen.asm"
 
 	%include "ram_common.asm"
 	%include "ram_marchu.asm"

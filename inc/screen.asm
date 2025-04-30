@@ -4,6 +4,7 @@
 y_tests		equ	3
 y_fails		equ	y_tests+1
 
+%define xy(x,y) ((y<<8)|x)
 
 ; ---------------------------------------------------------------------------
 section_save
@@ -24,30 +25,53 @@ y_grid_start	equ	7
 x_grid_start	equ	7
 x_grid_loffs	equ	6
 
-y_grid_end	equ	y_grid_start+8
+y_grid_end		equ	y_grid_start+8
+
+y_header		equ	5
+x_header_left	equ	1
+
+x_ss			equ	x_header_left+4
+y_ss			equ	y_header
+x_pass			equ	x_ss+12
+y_pass			equ	y_header
+x_test			equ	x_pass+12
+y_test			equ	y_header
+x_range			equ	80-16-1
+y_range			equ	y_header
 
 scr_reverse_cmd		asciiz	1Bh,"[7;2m"
 scr_normal_cmd		asciiz	1Bh,"[m"
 scr_grid_header		asciiz	"Addrs  EM  EB"
 scr_grid_space		asciiz	"   "
 x_k_start		equ 2
-scr_k_labels		db 	x_k_start,    y_grid_start+ 5, " 64K", 0
-			db 	x_k_start,    y_grid_start+10, "128K", 0
-			db 	x_k_start+16, y_grid_start+ 5, "192K", 0
-			db 	x_k_start+16, y_grid_start+10, "256K", 0
-			db 	x_k_start+32, y_grid_start+ 5, "320K", 0
-			db 	x_k_start+32, y_grid_start+10, "384K", 0
-			db 	x_k_start+48, y_grid_start+ 5, "448K", 0
-			db 	x_k_start+48, y_grid_start+10, "512K", 0
-			db 	x_k_start+64, y_grid_start+ 5, "576K", 0
-			db 	x_k_start+64, y_grid_start+10, "640K", 0
-			db	0 ; end
+scr_k_labels:
+			db 	x_k_start,    	y_grid_start+ 5,	" 64K", 0
+			db 	x_k_start,    	y_grid_start+10, 	"128K", 0
+			db 	x_k_start+16, 	y_grid_start+ 5, 	"192K", 0
+			db 	x_k_start+16, 	y_grid_start+10, 	"256K", 0
+			db 	x_k_start+32, 	y_grid_start+ 5, 	"320K", 0
+			db 	x_k_start+32, 	y_grid_start+10, 	"384K", 0
+			db 	x_k_start+48, 	y_grid_start+ 5, 	"448K", 0
+			db 	x_k_start+48, 	y_grid_start+10, 	"512K", 0
+			db 	x_k_start+64, 	y_grid_start+ 5, 	"576K", 0
+			db 	x_k_start+64, 	y_grid_start+10, 	"640K", 0
+			db	x_ss-4,    	  	y_ss,       		"SS:", 0
+			db	x_pass-6,     	y_pass,   			"Pass:", 0
+			db	x_test-6,     	y_test,   			"Test:", 0
+			db	x_range+2,    	y_range,			"00:0-  00:FFF", 0
+			db	0
 
-scr_test_header_xy:	equ	0x0502
-scr_test_header:	asciiz	"Pass "
-scr_test_separator:	asciiz	": "
-scr_label_march:	asciiz	"March-U "
-scr_label_bit:		asciiz	"Bus Exercise "
+scr_ss_xy			equ	xy( x_ss, y_ss )
+scr_pass_xy			equ	xy( x_pass, y_pass )
+scr_test_xy			equ	xy( x_test, y_test )
+scr_addrs_xy		equ	xy( x_range, y_range )
+scr_test_len		equ	(x_range-x_test)
+
+scr_test_header_xy	equ	0x0502
+scr_test_header		asciiz	"Pass "
+scr_test_separator	asciiz	": "
+scr_label_march		asciiz	"March-U "
+scr_label_bit		asciiz	"Bus Exercise "
 
 scr_sep_line		equ	2
 scr_sep_char		equ	'-'
@@ -92,7 +116,7 @@ _h_to_u8:
 		jbe	.done
 		sub	al, 7			; look at A-F
 		cmp	al, 0x0F		; <= 'F'?
-		jbe	.done			
+		jbe	.done
 		sub	al, 'a' - 'A'		; <= 'f'?
 		cmp	al, 0x0F		; <= 'F'?
 		jbe	.done
@@ -101,18 +125,11 @@ _h_to_u8:
 		ret
 
 
-scr_clear_line:
-	push	ax
-	mov	al, ' '
-	call	scr_fill_line
-	pop	ax
-	ret
-
-
-; MARK: scr_clear_line
-scr_fill_line:
+scr_clear:
 	push	ax
 	push	cx
+	push	dx
+	push	di
 	push	es
 	pushf
 	cld
@@ -120,66 +137,180 @@ scr_fill_line:
 	mov	di, ss			; get the video memory segment from SS
 	mov	es, di
 
-	push	dx
-	call	scr_getxy
-	xor	dl, dl
-	call	scr_goto
-	pop	dx
-
-	mov	ah, [ss:scrAttr]
-	mov	di, [ss:scrPos]		; get current cursor position
-	; mov	al, ' '
-	mov	cx, 80
-
-	rep	stosw
-; .loop:	call	scr_putc
-; 	loop	.loop
+	mov	ax,0700h+' '	; Attribute + space
+	xor	di,di		; Start at first screen position.
+	mov	cx,rwdata_base/2		; 2000 words.
+	rep	stosw		; STOSW: AX-->[ES:DI], then DI=DI+2
 
 	popf
 	pop	es
+	pop	di
+	pop	dx
 	pop	cx
 	pop	ax
+	ret
+
+scr_clear_line:
+	push	ax
+
+	mov	al, ' '
+	call	scr_fill_line
+
+	pop	ax
+	ret
+
+	; push	ax
+	; mov	al, ' '
+	; call	scr_fill_line
+	; pop	ax
+	; ret
+
+
+; MARK: scr_clear_line
+scr_fill_line:
+	push	cx
+	push	dx
+
+	call	scr_getxy
+	xor	dl, dl
+	call	scr_goto
+	mov	cx, 80
+	call	scr_fill
+
+	pop	dx
+	pop	cx
+	ret
+
+
+; 	push	ax
+; 	push	cx
+; 	push	dx
+; 	push	di
+; 	push	es
+; 	pushf
+; 	cld
+
+; 	mov	di, ss			; get the video memory segment from SS
+; 	mov	es, di
+
+; 	call	scr_getxy
+; 	xor	dl, dl
+; 	call	scr_goto
+
+; 	mov	ah, [ss:scrAttr]
+; 	mov	di, [ss:scrPos]		; get current cursor position
+; 	; mov	al, ' '
+; 	mov	cx, 80
+
+; 	rep	stosw
+; ; .loop:	call	scr_putc
+; ; 	loop	.loop
+
+; 	popf
+; 	pop	es
+; 	push	di
+; 	pop	dx
+; 	pop	cx
+; 	pop	ax
+; 	ret
+
+scr_fill:
+; input:
+;	cx = number of characters to fill
+;	al = character to fill with
+	push	di
+	push	es
+	pushf
+
+	mov	di, ss			; get the video memory segment from SS
+	mov	es, di
+
+	mov	ah, [ss:scrAttr]
+	mov	di, [ss:scrPos]		; get current cursor position
+
+	cld
+	rep	stosw
+
+	popf
+	pop	es
+	pop	di
 	ret
 
 ; MARK: scr_test_announce
 scr_test_announce:
 	push	ax
+	push	cx
 	push	dx
 	push	si
 	push	ds
 
-	push	cs			; we get strings from the ROM in CS
-	pop	ds
+	; push	cs				; we get strings from the ROM in CS
+	; pop	ds
+	mov	dx, cs				; we get strings from the ROM in CS
+	mov	ds, dx
+
+	; mov	ah, scr_test_normal_attr
+	; call	scr_set_attr
+
+	; mov	dx, scr_test_header_xy		; print the test header (description)
+	; call	scr_goto
+	; call	scr_clear_line
 
 	mov	ah, scr_test_normal_attr
 	call	scr_set_attr
 
-	mov	dx, scr_test_header_xy
+	mov	dx, scr_ss_xy			; print the stack segment
 	call	scr_goto
-	call	scr_clear_line
-	call	scr_goto
-	mov	si, scr_test_header
-	call	scr_puts
-
-	mov	ax, [ss:pass_count]
+	mov	ax, ss
 	call	scr_put_hex_ax
-
-	mov	si, scr_test_separator
-	call	scr_puts
 
 	mov	ah, scr_test_header_attr
 	call	scr_set_attr
+
+	mov	dx, scr_pass_xy			; print the pass count
+	call	scr_goto
+	mov	ax, [ss:pass_count]
+	call	scr_put_hex_ax
+
+	mov	dx, scr_test_xy			; print the test label
+	call	scr_goto
+	mov	cx, scr_test_len
+	mov	al, ' '
+	call	scr_fill
+	mov	dx, scr_test_xy
+	call	scr_goto
 	mov	si, [ss:test_label]
 	call	scr_puts
-	mov	ah, [ss:test_num]
+
+	mov	ah, [ss:test_num]		; show the test's number (step for march, value for bitpat)
 
 	; cmp	ah, 0xFF		; skip if we've indicated not to print this number
 	; je	.skip
 	call	scr_put_hex_ah
-.skip:
+
+	; call	scr_goto
+	; mov	si, scr_test_header
+	; call	scr_puts
+
+	; mov	ax, [ss:pass_count]		; show the pass count
+	; call	scr_put_hex_ax
+	; mov	si, scr_test_separator
+	; call	scr_puts
+
+	; mov	ah, scr_test_header_attr	; show this test's label
+	; call	scr_set_attr
+	; mov	si, [ss:test_label]
+	; call	scr_puts
+; 	mov	ah, [ss:test_num]		; show the test's number (step for march, value for bitpat)
+
+; 	; cmp	ah, 0xFF		; skip if we've indicated not to print this number
+; 	; je	.skip
+; 	call	scr_put_hex_ah
+; .skip:
 	pop	ds
 	pop	si
 	pop 	dx
+	pop	cx
 	pop	ax
 	ret
 
@@ -237,7 +368,7 @@ scr_puts_nosave:
 	cmp	al, 0			; check for null terminator
 	je	.done			; if null, we're done
 	stosw				; [es:di] = ax, di += 2
-	loop	.loop			; repeat 
+	loop	.loop			; repeat
 
 .done:	mov	[ss:scrPos], di		; save new cursor position
 	popf
@@ -418,7 +549,7 @@ __scr_put_hex:
 	rol	ax, 1
 	rol	ax, 1
 
-.put:	
+.put:
 	mov	bx, ax		; save the value
 	call	__i2h_al	; convert to ASCII
 	call	scr_putc
@@ -461,7 +592,7 @@ __i2h_al:
 ; y_grid_end	equ	y_grid_start+16
 
 ; scr_goto_seg:
-; ; input: 
+; ; input:
 ; ;	al = segment
 ; 	push	ax
 ; 	push	dx
@@ -491,7 +622,7 @@ __i2h_al:
 
 ; MARK: scr_goto_seg
 scr_goto_seg:
-; input: 
+; input:
 ;	al = segment
 	push	ax
 	push	dx
@@ -537,7 +668,7 @@ draw_ram_headers:
 	call	scr_goto
 
 	mov	cx, 5
-.hloop:	
+.hloop:
 	mov	si, scr_reverse_cmd
 	call	scr_puts
 	mov	si, scr_grid_header	; print the header
@@ -553,7 +684,7 @@ draw_ram_headers:
 	call	scr_puts
 	mov	cx, 40			; 16 address labels
 	mov	al, 0			; segment counter
-.lloop:	
+.lloop:
 	call	scr_goto_seg
 	call    scr_getxy
 	sub dl, x_grid_loffs	; go back for label
@@ -568,7 +699,7 @@ draw_ram_headers:
 	inc	al
 	loop	.lloop
 
-.klabs:	
+.klabs:
 	mov	si, scr_normal_cmd
 	call	scr_puts
 	mov	si, scr_k_labels
@@ -579,15 +710,8 @@ draw_ram_headers:
 	ret
 
 
-
-
-; ---------------------------------------------------------------------------
-section_restore ; MARK: __ restore __
-; ---------------------------------------------------------------------------
-
 draw_screen:
 	mov 	[ss:test_offset], byte 0
-	call	scr_clear
 
 	mov	si, title_text
 	call	scr_puts_labels
@@ -599,4 +723,8 @@ draw_screen:
 	call	scr_fill_line
 
 	call	draw_ram_headers
+	ret
 
+; ---------------------------------------------------------------------------
+section_restore ; MARK: __ restore __
+; ---------------------------------------------------------------------------

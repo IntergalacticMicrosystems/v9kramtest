@@ -6,12 +6,6 @@ seg_start	equ	0
 ; ---------------------------------------------------------------------------
 section_save
 ; ---------------------------------------------------------------------------
-section .rwdata ; MARK: __ .rwdata __
-; ---------------------------------------------------------------------------
-
-
-
-; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
 
@@ -47,7 +41,6 @@ ram_test_upwards:
 ; run the march test in bp (including continuations on error) over the specified segments
 ; inputs:
 ;	bp = march test step function
-;	bx = start segment
 ; 	dl = number of segments to test (will test dl*si bytes total)
 ; 	si = size of segment to test
 ; state variables:
@@ -106,25 +99,19 @@ ram_test_downwards:
 
 ; MARK: ram_test_segment
 ram_test_segment:
-		push	bp		; save the test step function
 		mov	cx, si
 		mov	es, bx		; set the segment to test
 		mov	ds, bx
 
 		call	startseg
 
-	.continue:
+	; .continue:
 		cmp	dh, 0xFF	; check if this segment is all errors (probably missing)
 		je	.nextseg	; if so, don't bother testing it again
-		xor	ah, ah		; clear the error bits for the restart
 
-		call	bp		; start or continue the specified step
-
-		cmp	bp, 0		; check for done with the segment
-		jne	.continue	; if not, continue testing
+		call	bp		; run the specified step
 
 	.nextseg:
-		pop	bp		; restore the test step function
 		call	endseg
 		ret
 
@@ -134,8 +121,27 @@ ram_test_segment:
 startseg:
 		; XXX - show on the screen that we are starting this segment
 		push	ax
+		push	si
+		push	ds
+		push 	dx		; print the test addresses
+
+		mov	dx, scr_addrs_xy
+		call	scr_goto
 
 		mov	ax, es
+		call	scr_put_hex_ah
+
+		call	scr_getxy
+		add	dl, 5
+		call	scr_goto
+
+		add	ax, 0x0300
+		call	scr_put_hex_ah
+
+		pop	dx
+		pop	ds
+		pop	si
+
 		mov	al, ah
 		call	scr_goto_seg
 
@@ -177,7 +183,7 @@ endseg:
 	.done:
 		mov	al, " "
 		call	scr_putc
-		
+
 		pop	ax
 		ret
 

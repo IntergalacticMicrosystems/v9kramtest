@@ -20,42 +20,6 @@ cold_boot:
 	mov byte [es:CrtRg0], 1
 	mov byte [es:CrtRg1], 0		; shut down CRT
 
-;	Test screen ram, to ensure CRT could possibly operate.
-;	Test with 55AA and AA55 hex.  Leave memory at 0000.
-
-	mov ax, ScreenRam		; base of screen ram
-	mov es, ax
-	mov ax, 055AAh			; first test pattern
-
-.test_screen_ram:
-	xor di, di				; start at offset of 0
-	mov cx, 2048			; for 2k words (4k bytes)
-	cld						; auto increment locations
-	rep stosw
-
-	cmp ax, 0				; done?
-	jz  init_pic
-
-	xor di, di				; compare starting at offset 0
-	mov cx, 2048
-	repz scasw
-	jnz .bad_screen_ram		; error, did not match
-
-	xor ax, 0FFFFh			; switch pattern from 55AA to AA55
-	jl .test_screen_ram		; not done, test with pattern #2
-
-	xor ax, ax				; final pattern is zeroes
-	jmp .test_screen_ram
-
-; 	screen RAM is bad...
-.bad_screen_ram:
-	mov al, FE_bad_screen	; error code for field service
-	mov dx, FE_Ioport
-
-.error_display:
-	out dx, al				; issue the error for FE scoping
-	jmp .error_display		; that's all folks
-
 init_pic:					; initialize Intel 8259 PIC
 	mov ax, SegPic
 	mov es, ax				; address the memory-mapped I/O

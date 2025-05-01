@@ -1,22 +1,15 @@
 ; code: language=nasm tabSize=8
 %include "defines.inc"
 
-; ---------------------------------------------------------------------------
-section_save
-section .romdata
-; ---------------------------------------------------------------------------
-TxtVrtf: 		db 'Test of video RAM failed. Aborting.  <-----', 0
-; ---------------------------------------------------------------------------
-section_restore
-; ---------------------------------------------------------------------------
 
-CheckVideoRAM:
-	__CHECKPOINT__NOSTACK__ 0x0B
 ; ****************************************************************************
 ; From here on, we need RAM for variables and for the stack.
 ;
 ; If any of those found, set ES to it.
 ; If none found, send checkpoint 8A then halt the CPU.
+
+test_vram:
+	__CHECKPOINT__NOSTACK__ 0x0B
 
 	mov	si, 4096		; size of VRAM to test
 	mov	ax, cs
@@ -25,16 +18,10 @@ CheckVideoRAM:
 	mov	es, ax
 
 test_vram_march:
-	%include "ram_marchu_nostack.asm"
+	romcall	marchu_nostack
 
 	or	dh, dh			; did the RAM pass?
-	jz	TVAR			; --> if yes, we have video RAM
-
-
-NOVID:
-; ----------------------------------------------------------------------------
-; No MDA/CGA/A0000 video RAM found.
-; ----------------------------------------------------------------------------
+	jz	.pass			; --> if yes, we have video RAM
 
 	__CHECKPOINT__NOSTACK__ 0x0C ;++++++++++++++++++++++++++++++++++++++++
 
@@ -43,70 +30,15 @@ NOVID:
 	hlt
 
 
-TVAR:
-; ****************************************************************************
-; Video RAM was found.
-;
-; On entry, ES is pointing to Address F0000h
-; This diagnostic uses only 96 bytes of the RAM. We will now test those 96 bytes before we commit to using them.
-;
-;   MDA: 4 KB of video RAM. The last 96 bytes are unused by the card - what this diagnostic will use.
-;   CGA: The last 96 bytes of the first 4 KB are unused by the card - what this diagnostic will use.
-; A0000: The 96 bytes starting at offset 4000h.
-;
-; Test the 96 bytes. If that test fails, halt the CPU.
-
-	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
-
-	mov	ax, ScreenRam
-	mov	es, ax
-	mov	ax,0FFFFh		; First test data pattern
-
-.L16:	; Fill 96 bytes with test data.
-	mov	di,rwdata_base	; End of screen RAM.
-	mov	cx,48			; 48 words = 96 bytes
-	rep	stosw			; Fill 48 words with test data  { STOSW: AX-->[ES:DI], then DI=DI+2 }
-
-	; A short delay.
-	xor	cx,cx
-	loop	$
-
-	; See if the 96 bytes have the expected content.
-	mov	di,rwdata_base	; End of screen RAM
-	mov	cx,48
-	repe	scasw		; Compare 48 words with test data, OK?
-	jne	.FAIL			; --> if no
-
-	; They do, so on to next test pattern.
-	sub	ax,5555h		; Next pattern, overflow?
-	jnc	.L16			; --> if no
-
-	jmp	.PASS			; -->
-
-.FAIL:
-; ----------------------------------------------------------------------------
-; MDA/CGA: Failure of the last 96 bytes of MDA/CGA video RAM.
-;   A0000: Failure of the 96 bytes at offset 4000h within the RAM.
-; ----------------------------------------------------------------------------
-
-	__CHECKPOINT__NOSTACK__ 0x0E ;++++++++++++++++++++++++++++++++++++++++
-
-	; Halt the CPU
-	cli
-	hlt
-
-
-.PASS:
 	;------------------------
 	; Test successful.
 	; -----------------------
 	; MDA/CGA: Set the stack top to near the top of video RAM.
 	;   A0000: Set the stack top at 4094 bytes into RAM.
-
+.pass:
 	mov	ax, es
 	mov	ss, ax				; SS = ES = segment address of video RAM (either MDA or CGA or A0000).
-	mov	sp, rwdata_init_sp	; 4095
-
+	mov	sp, rwdata_init_sp	; 4096
 
 
 ; Info:	SS won't change anymore and will serve as a permanent pointer to the video RAM segment.
@@ -127,25 +59,3 @@ blink_leds:
 	call Time
 
 	and byte [es:Via6OraIra], ~(F_led0+F_led1)	; trun LEDs off
-
-
-clear_rwdata:
-; ****************************************************************************
-; Clear the variables that are stored in the unused 96 bytes at the end of 4 KB sized video RAM.
-; For CGA, that 4 KB is the first block of 4 KB.
-	mov	ax, ss
-	mov	es, ax			; Point ES to segment address of MDA/CGA video RAM.
-
-	xor	al, al			; The bytes are to be zeroed.
-	mov	di, rwdata_base		; Start at the first variable (Err8253Ch0).
-	; mov	cx, 48			; 48 words = 96 bytes
-	mov	cx, (rwdata_end-rwdata_start)	; erase the variable area
-	rep	stosb			; STOSW: AX-->[ES:DI], then DI=DI+2
-
-	mov	al, 55h			; fill the rest with 55h so we can see how much of the area is used
-	mov	cx, (rwdata_init_sp-rwdata_base)-(rwdata_end-rwdata_start)
-	rep	stosb
-
-	; mov	ax, 0CCCCh
-	; push	ax			; test the stack
-	; pop	ax

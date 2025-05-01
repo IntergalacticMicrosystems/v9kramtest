@@ -67,17 +67,19 @@ section .lib ; MARK: __ .lib __
 %include "postcodes_out.asm"
 %include "serial.asm"
 %include "screen.asm"
+%include "ram_common.asm" 
+%include "ram_marchu_nostack.asm" 
 
 ; ---------------------------------------------------------------------------
 section .text ; MARK: __ .text __
 ; ---------------------------------------------------------------------------
 
-; MARK: DiagStart
-DiagStart:
 ; ************************************************************************************************
 ; Initialization modules
-	%include "010_cold_boot.inc"
-	;%include "030_video.inc"
+%include "010_cold_boot.inc"
+;%include "030_video.inc"
+
+v9kramtest_start: 
 	;%include "050_beep.inc"
 	%include "060_vram.inc"
 
@@ -86,24 +88,17 @@ DiagStart:
 	call	scr_clear
 	call 	draw_screen
 
-; MARK: DiagLoop
-DiagLoop:
-; ************************************************************************************************
-; MAIN DIAGNOSTIC LOOP
-; ************************************************************************************************
-
 	; Disable maskable interrupts, and set the direction flag to increment.
 	cli
 	cld
 
+v9kramtest_loop: 
 	add	word [ss:pass_count], 1		; Increment the pass count.
 
-	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
-
-	%include "ram_common.asm"
-	%include "ram_marchu.asm"
-	;%include "ram_bitpat.asm"
-	;jmp	DiagLoop
+	%include "ram_marchu.asm" 
+	%include "ram_ganssle.asm" 
+ 
+	;jmp	v9kramtest_loop 
 	hlt
 
 
@@ -113,7 +108,7 @@ DiagLoop:
 ; ---------------------------------------------------------------------------
 section .resetvec ; MARK: __ .resetvec __
 ; ---------------------------------------------------------------------------
-PowerOn:
+PowerOn:	
 	jmp	BASESEG:cold_boot	; CS will be 0F000h
 
 

@@ -15,10 +15,10 @@ test_vram:
 	mov	ax, cs
 	mov	ss, ax			; SS := CS
 	mov	ax, ScreenRam
-	mov	es, ax
+	mov	es, ax			; set up ES and DS to the segment we are testing
+	mov ds, ax
 
-test_vram_march:
-	romcall	marchu_nostack
+	bpcall	marchu_nostack
 
 	or	dh, dh			; did the RAM pass?
 	jz	.pass			; --> if yes, we have video RAM

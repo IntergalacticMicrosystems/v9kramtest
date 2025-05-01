@@ -6,7 +6,7 @@ use Data::Dumper;
 my $BASEADDR = 0xFE000;
 
 my $break = join( "|", split( / /, $ENV{BREAK} ) );
-warn "break = $break\n";
+# warn "break = $break\n";
 my $reBreak = qr/$break/;
 my $reNoScan = qr/data$/;
 
@@ -71,7 +71,7 @@ for $section ( sort keys %SYM ) {
 	for my $sym ( @syms ) {
 		my $linear = $sym->{addr} + $BASEADDR;
 		my $label = $sym->{sym};
-		$label =~ s/^.*[.]/./;
+		$label =~ s/^.*?[.]/./;
 
 		# $COMMENTS{$linear} .= $sym->{sym} . ": ";
 		$COMMENTS{$linear} .= $label . ": ";
@@ -135,7 +135,7 @@ $/x;
 # }
 
 my @SECTS = ( $SYM{".text"} );
-sub cur_sect () { $SECTS[$#SECTS] }
+sub cur_sect () { $SECTS[$#SECTS] } 
 sub save_sect () { push @SECTS, cur_sect }
 sub restore_sect () { pop @SECTS }
 sub set_sect ($) { $SECTS[$#SECTS] = $SYM{$_[0]} }
@@ -219,6 +219,6 @@ for my $addr ( sort keys %BREAKPOINTS ) {
 
 # 	for my $sym ( @syms ) {
 # 		my $linear = $sym->{addr} + 0xF0000;
-# 		print
+# 		print 
 # 	}
 # }

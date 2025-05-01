@@ -1,24 +1,45 @@
 TARGET := v9kramtest
+ROMS = $(TARGET).hex $(TARGET)_FE.bin $(TARGET)_FF.bin $(TARGET)_FE.hex $(TARGET)_FF.hex
+
+.DEFAULT: all
+all: $(TARGET).bin $(ROMS)
+
+# create a user name to indicate who compiled this
+USER_ID := $(shell gh api user -q ".login" 2>/dev/null || git config --get user.email 2>/dev/null || echo local_user)
+$(info -- $(USER_ID) --)
+
+# get a branch name if it is not main or master
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo local)
+ifeq ($(BRANCH),main)
+BRANCH :=
+endif
+ifeq ($(BRANCH),master)
+BRANCH :=
+endif
+ifneq ($(BRANCH),)
+BRANCH := $(BRANCH)/
+endif
+
+# create a version string, including branch if it is not main or master
 
 ifndef VERSION
-VERSION := $(shell git describe 2>/dev/null || echo local_build)
+VERSION := $(BRANCH)$(shell git describe 2>/dev/null || echo local_build)
 endif
 ifeq ($(VERSION),)
-VERSION := local_build
+VERSION := local
 endif
 
+# print the version string if this is not a make restart
 $(if $(MAKE_RESTARTS),,$(info -- $(TARGET) $(VERSION) --)$(info ))
 
-ROMS = $(TARGET)_FE.bin $(TARGET)_FF.bin $(TARGET)_FE.hex $(TARGET)_FF.hex
-
+# functions to create define options for nasm
 defined = $(findstring undefined,$(origin $(1)))
-
 DEFLIST = VERSION SHOWSTACK
 # export $(DEFLIST)
-
 VARDEF = $(if $(call defined,$(1)),,-d$(1)$(if $(value $(1)),="$(value $(1))"))
 
 DEFS := $(foreach var,$(DEFLIST),$(call VARDEF,$(var)))
+
 
 INC := -iinc
 
@@ -29,6 +50,7 @@ SRC := $(TARGET).asm
 NASM := nasm
 #MAME := mame
 MAME := $(HOME)/Git/mame/v9kemu
+SHASUM := shasum
 
 RAM = 256
 #SERIAL = pty
@@ -39,10 +61,11 @@ FF_NAME= "v9000 univ. ff f3f7 39fe.8j"
 export RAM SERIAL BREAK FLAGS
 
 
-%.bin: %.asm Makefile
+%.bin: %.asm %.dep Makefile
 	$(NASM) $(INC) -f bin -o $@ -l $(@:%.bin=%.lst) -Lm $(DEFS) $<
 	$(info )
 	@tools/size $(@:%.bin=%.map)
+	@$(SHASUM) $@
 
 $(ROMS): $(TARGET).bin
 	split -b 4k $(TARGET).bin $(TARGET)_
@@ -54,19 +77,23 @@ $(ROMS): $(TARGET).bin
 #	bin2hex -q -o $(TARGET)_FF.hex $(TARGET)_FF.bin
 	$(info )
 
-clean:
-	rm -f $(ROMS) $(TARGET).bin $(TARGET).lst $(TARGET).map $(TARGET).debug $(TARGET).dep
+tidy:
+	rm -f $(ROMS) $(TARGET).bin $(TARGET).lst $(TARGET).map $(TARGET).debug
 
-$(TARGET).dep: $(SRC)
-	$(NASM) $(INC) -M -MF $@ -MT $(TARGET).bin $<
+clean: tidy
+	rm -f $(TARGET).dep
 
-$(TARGET).map: $(TARGET).bin
+%.dep: %.asm
+	$(NASM) $(INC) -M -MF $@ -MT $@ $< 
 
-$(TARGET).debug: $(TARGET).map
+%.map: %.bin
+	@true
+
+%.debug: %.map
 	tools/make_debugscript $< > $@
 
 debug: DEBUG = -debug
-debug: all $(TARGET).debug run
+debug: $(TARGET).debug run
 
 run: all
 	rm -f comments/victor9k.cmt
@@ -74,8 +101,8 @@ run: all
 	cp $(TARGET)_FF.bin $(ROMPATH)/victor9k/$(FF_NAME)
 	$(MAME) victor9k -inipath ./test -rompath $(ROMPATH) -rs232a $(SERIAL) -ramsize $(RAM)K $(DEBUG) $(FLAGS)
 
-.PHONY: binaries clean run $(TARGET).map version debug deps
-.DEFAULT: all
+.PHONY: all binaries clean run version debug deps
+.NOTINTERMEDIATE:
 
 all: $(ROMS)
 

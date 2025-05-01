@@ -18,17 +18,17 @@ CheckVideoRAM:
 ; If any of those found, set ES to it.
 ; If none found, send checkpoint 8A then halt the CPU.
 
+	mov	si, 4096		; size of VRAM to test
+	mov	ax, cs
+	mov	ss, ax			; SS := CS
 	mov	ax, ScreenRam
 	mov	es, ax
-	mov	word [es:0],0720h	; Try one address for the moment.
-	nop				; Delay for I/O.
-	nop				; Delay for I/O.
-	cmp	word [es:0],0720h	; Read it, the same value?
-	jne	NOVID			; --> if no
 
-	__CHECKPOINT__NOSTACK__ 0x0C ;++++++++++++++++++++++++++++++++++++++++
+test_vram_march:
+	%include "ram_marchu_nostack.asm"
 
-	jmp	CVREXIT			; -->
+	or	dh, dh			; did the RAM pass?
+	jz	TVAR			; --> if yes, we have video RAM
 
 
 NOVID:
@@ -36,13 +36,11 @@ NOVID:
 ; No MDA/CGA/A0000 video RAM found.
 ; ----------------------------------------------------------------------------
 
-	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
+	__CHECKPOINT__NOSTACK__ 0x0C ;++++++++++++++++++++++++++++++++++++++++
 
 	; Halt the CPU.
 	cli
 	hlt
-
-CVREXIT:
 
 
 TVAR:
@@ -57,6 +55,8 @@ TVAR:
 ; A0000: The 96 bytes starting at offset 4000h.
 ;
 ; Test the 96 bytes. If that test fails, halt the CPU.
+
+	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
 
 	mov	ax, ScreenRam
 	mov	es, ax

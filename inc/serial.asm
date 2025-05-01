@@ -91,10 +91,10 @@ SendAlToCom1Raw:
 .EXIT	ret
 
 
-; MARK: scr_goto_seg
-scr_goto_seg:
 ; input: 
 ;	al = segment
+; MARK: scr_goto_seg
+scr_goto_seg:
 	push	ax
 	push	dx
 
@@ -103,8 +103,7 @@ scr_goto_seg:
 	and	ah, 1Fh			; mask out the upper bits
 	shr	ah, 1
 	shr	ah, 1
-	; mov	dh, y_grid_end		; count bottom up
-	; sub	dh, ah			; subtract the low nybble to get row number
+	
 	mov	dh, y_grid_start+1
 	add	dh, ah
 	test	al, 10h
@@ -143,77 +142,76 @@ scr_get_hex:
     ret
 
 
-; MARK: scr_put_hex_ah_h
-scr_put_hex_ah_h:
-; print high nybble of ah as a hex digit
 ; input:
 ;	ah = value to print
-	push	cx
-	mov	cx, 1
-	jmp	__scr_put_hex
+; MARK: scr_put_hex_ah_h
+scr_put_hex_ah_h:	; print high nybble of ah as a hex digit
+		push	cx
+		mov	cx, 1
+		jmp	__scr_put_hex
 
-; MARK: scr_put_hex_ah_l
-scr_put_hex_al_l:
-; print the low nybble of bh as a hex digit
+
 ; input:
 ;	al = value to print
-	push 	ax
-	call 	__i2h_al
-	call 	scr_putc
-	pop	ax
-	ret
+; MARK: scr_put_hex_ah_l
+scr_put_hex_al_l:	; print the low nybble of bh as a hex digit
+		push 	ax
+		call 	__i2h_al
+		call 	scr_putc
+		pop	ax
+		ret
 
-; MARK: __scr_put_hex_ax
-scr_put_hex_ax:
 ; input:
 ;	bx = value to print
-	push	cx
-	mov	cx, 4		; 4 nybbles in ax
-	jmp	__scr_put_hex
+; MARK: __scr_put_hex_ax
+scr_put_hex_ax:
+		push	cx
+		mov	cx, 4		; 4 nybbles in ax
+		jmp	__scr_put_hex
 
-; MARK: __scr_put_hex_ah
-scr_put_hex_ah:
 ; input:
 ;	bh = value to print
-	push 	cx
-	mov	cx, 2		; 2 nybbles in ah
-__scr_put_hex:
+; MARK: __scr_put_hex_ah
+scr_put_hex_ah:
+		push 	cx
+		mov	cx, 2		; 2 nybbles in ah
+		; fall through to __scr_put_hex
+
 ; input:
 ;	bx = value to print (upper nybble)
 ;       cx = number of nybbles to print
-	push 	ax
-	push	bx
+; MARK: __scr_put_hex
+__scr_put_hex:
+		push 	ax
+		push	bx
 
-.loop:	rol	ax, 1		; rol	bx, 4
-	rol	ax, 1
-	rol	ax, 1
-	rol	ax, 1
+	.loop:	rol	ax, 1		; rol	bx, 4
+		rol	ax, 1
+		rol	ax, 1
+		rol	ax, 1
 
-.put:	
-	mov	bx, ax		; save the value
-	call	__i2h_al	; convert to ASCII
-	call	scr_putc
-	mov	ax, bx
-	loop	.loop
+	.put:	
+		mov	bx, ax		; save the value
+		call	__i2h_al	; convert to ASCII
+		call	scr_putc
+		mov	ax, bx
+		loop	.loop
 
-	pop	bx
-	pop	ax
-	pop	cx
-	ret
+		pop	bx
+		pop	ax
+		pop	cx
+		ret
 
-; MARK: __i2h_al
-__i2h_al:
-; convert low nybble of al to ASCII
 ; input:
 ;	al = value to convert
-	and	al,0fh
-	add	al,90h
-	daa
-	adc	al,40h
-	daa
-	ret
-
-
+; MARK: __i2h_al
+__i2h_al:	; convert low nybble of al to ASCII
+		and	al,0fh
+		add	al,90h
+		daa
+		adc	al,40h
+		daa
+		ret
 
 
 ; MARK: scr_send_esc_lbr
@@ -320,51 +318,83 @@ scr_clear_line:
 
 ; MARK: scr_fill_line
 scr_fill_line:
-	push	cx
-	mov	cx, 80
-	add word [ss:scrPos], 80	; increment cursor position
-.loop:
-	call 	SendAlToCom1Raw
-	loop 	.loop
+		push	cx
+		push	dx
 
-	pop	cx
-	ret
+		call	scr_getxy
+		xor	dl, dl
+		call	scr_goto
+		mov	cx, 80
+		call	scr_fill
+
+		pop	dx
+		pop	cx
+		ret
+
+
+; input:
+;	cx = number of characters to fill
+;	al = character to fill with
+; MARK: scr_fill
+scr_fill:
+		push	di
+		push	es
+		pushf
+
+		mov	di, ss				; get the video memory segment from SS
+		mov	es, di
+		mov	di, [ss:scrPos]		; get current cursor position
+
+		cld
+		rep	stosw
+
+		popf
+		pop	es
+		pop	di
+		ret
 
 
 ; MARK: scr_test_announce
 scr_test_announce:
-	push	ax
-	push	dx
-	push	si
-	push	ds
+		push	ax
+		push	cx
+		push	dx
+		push	si
+		push	ds
 
-	push	cs			; we get strings from the ROM in CS
-	pop	ds
+		mov	dx, cs				; we get strings from the ROM in CS
+		mov	ds, dx
 
-	mov	dx, scr_test_header_xy
-	call	scr_goto
-	call	scr_clear_line
-	call	scr_goto
-	mov	si, scr_test_header
-	call	scr_puts
+		mov	dx, scr_ss_xy			; print the stack segment
+		call	scr_goto
+		mov	ax, ss
+		call	scr_put_hex_ax
 
-	mov	ax, [ss:pass_count]
-	call	scr_put_hex_ax
+		mov	dx, scr_pass_xy			; print the pass count
+		call	scr_goto
+		mov	ax, [ss:pass_count]
+		call	scr_put_hex_ax
 
-	mov	si, scr_test_separator
-	call	scr_puts
+		mov	dx, scr_test_xy			; print the test label
+		call	scr_goto
+		mov	cx, scr_test_len
+		mov	al, ' '
+		call	scr_fill
+		mov	dx, scr_test_xy			
+		call	scr_goto
+		mov	si, [ss:test_label]
+		call	scr_puts
 
-	mov	si, [ss:test_label]
-	call	scr_puts
-	mov	ah, [ss:test_num]
+		mov	ah, [ss:test_num]		; show the test's number (step for march, value for ganssle)
 
-	call	scr_put_hex_ah
-.skip:
-	pop	ds
-	pop	si
-	pop 	dx
-	pop	ax
-	ret
+		call	scr_put_hex_ah
+
+		pop	ds
+		pop	si
+		pop 	dx
+		pop	cx
+		pop	ax
+		ret
 
 
 ; MARK: __send_al_bcd
@@ -381,13 +411,13 @@ __send_al_bcd:
 	ret
 
 
-; MARK: scr_puts_labels
-scr_puts_labels:
 ; input:
 ;	ds:si = struct: byte x, byte y, string to print (null terminated), [then either more, or attr=0 to end]
-	push	ax
-	push	di
-	push	cs
+; MARK: scr_puts_labels
+scr_puts_labels:
+		push	ax
+		push	di
+		push	cs
 	pop		ds
 
 
@@ -406,13 +436,12 @@ scr_puts_labels:
 	ret	
 
 
-; MARK: scr_puts_nosave
-scr_puts_nosave:
 ; input:
 ;	ds:si = string to print (null terminated)
 ; output:
 ;	ds:si = one byte past end of string
-
+; MARK: scr_puts_nosave
+scr_puts_nosave:
 	push	ax
 	push	cx
 	pushf

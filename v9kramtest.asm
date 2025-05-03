@@ -85,9 +85,6 @@ v9kramtest_start:
 
 	__CHECKPOINT__ 0x10 ;++++++++++++++++++++++++++++++++++++++++
 
-	call	scr_clear
-	call 	draw_screen
-
 	; Disable maskable interrupts, and set the direction flag to increment.
 	cli
 	cld
@@ -95,10 +92,13 @@ v9kramtest_start:
 v9kramtest_loop: 
 	add	word [ss:pass_count], 1		; Increment the pass count.
 
+	call	scr_clear
+	call 	draw_screen
+
 	%include "ram_marchu.asm" 
 	%include "ram_ganssle.asm" 
  
-	;jmp	v9kramtest_loop 
+	jmp	v9kramtest_loop 
 	hlt
 
 

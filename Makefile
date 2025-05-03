@@ -48,8 +48,8 @@ vpath % inc
 SRC := $(TARGET).asm
 
 NASM := nasm
-#MAME := mame
-MAME := $(HOME)/Git/mame/v9kemu
+MAME := mame
+#MAME := $(HOME)/Git/mame/v9kemu
 SHASUM := shasum
 
 RAM = 256
@@ -68,13 +68,15 @@ export RAM SERIAL BREAK FLAGS
 	@$(SHASUM) $@
 
 $(ROMS): $(TARGET).bin
+
+roms:
 	split -b 4k $(TARGET).bin $(TARGET)_
 	mv $(TARGET)_aa $(TARGET)_FE.bin
 	mv $(TARGET)_ab $(TARGET)_FF.bin
 	$(info )
-#	bin2hex -q -o $(TARGET).hex $(TARGET).bin
-#	bin2hex -q -o $(TARGET)_FE.hex $(TARGET)_FE.bin
-#	bin2hex -q -o $(TARGET)_FF.hex $(TARGET)_FF.bin
+	bin2hex -q -o $(TARGET).hex $(TARGET).bin
+	bin2hex -q -o $(TARGET)_FE.hex $(TARGET)_FE.bin
+	bin2hex -q -o $(TARGET)_FF.hex $(TARGET)_FF.bin
 	$(info )
 
 tidy:
@@ -104,7 +106,7 @@ run: all
 .PHONY: all binaries clean run version debug deps
 .NOTINTERMEDIATE:
 
-all: $(ROMS)
+all: $(ROMS) roms
 
 deps: $(TARGET).dep
 -include $(TARGET).dep

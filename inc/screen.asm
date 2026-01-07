@@ -23,7 +23,7 @@ section .romdata ; MARK: __ .romdata __
 ; ---------------------------------------------------------------------------
 y_grid_start	equ	7
 x_grid_start	equ	7
-x_grid_loffs	equ	6
+x_grid_loffs	equ	6  ; 6
 
 y_grid_end		equ	y_grid_start+8
 
@@ -36,8 +36,10 @@ x_pass			equ	x_ss+12
 y_pass			equ	y_header
 x_test			equ	x_pass+12
 y_test			equ	y_header
-x_range			equ	80-16-1
+x_range			equ	112-16-1    ; 80-16-1
 y_range			equ	y_header
+
+test_cols 		equ 7		; 5		
 
 scr_reverse_cmd		asciiz	1Bh,"[7;2m"
 scr_normal_cmd		asciiz	1Bh,"[m"
@@ -55,6 +57,10 @@ scr_k_labels:
 			db 	x_k_start+48, 	y_grid_start+10, 	"512K", 0
 			db 	x_k_start+64, 	y_grid_start+ 5, 	"576K", 0
 			db 	x_k_start+64, 	y_grid_start+10, 	"640K", 0
+			db 	x_k_start+80, 	y_grid_start+ 5, 	"704K", 0
+			db 	x_k_start+80, 	y_grid_start+10, 	"768K", 0
+			db 	x_k_start+96, 	y_grid_start+ 5, 	"832K", 0
+			db 	x_k_start+96, 	y_grid_start+10, 	"896K", 0
 			db	x_ss-4,    	  	y_ss,       		"SS:", 0
 			db	x_pass-6,     	y_pass,   			"Pass:", 0
 			db	x_test-6,     	y_test,   			"Test:", 0
@@ -346,7 +352,7 @@ scr_getxy:
 		push	ax
 
 		mov	ax, [ss:scrPos]
-		mov	dl, 160
+		mov	dl, 224   ; 160
 		div	dl			; now al = y, ah = 2x
 		shr	ah, 1			; now al = y, ah = x
 		mov	dh, al
@@ -420,7 +426,7 @@ calc_scr_pos:
 		push	ax
 		push	dx
 
-		mov	al, 160		; number of columns * 2 (for attribute)
+		mov	al, 224		; 160 number of columns * 2 (for attribute)
 		mul	dh		; ax := y * 160
 		xor	dh, dh
 		shl	dl, 1		; dx := x * 2 (for character and attribute)
@@ -548,7 +554,7 @@ draw_ram_headers:
 	mov	dl, x_grid_start-x_grid_loffs
 	call	scr_goto
 
-	mov	cx, 5
+	mov	cx, test_cols			
 .hloop:
 	mov	si, scr_reverse_cmd
 	call	scr_puts
@@ -563,7 +569,7 @@ draw_ram_headers:
 	; now print the block labels
 	mov	si, scr_reverse_cmd
 	call	scr_puts
-	mov	cx, 40			; 16 address labels
+	mov	cx, 8*test_cols			; address labels
 	mov	al, 0			; segment counter
 .lloop:
 	call	scr_goto_seg

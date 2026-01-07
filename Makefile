@@ -48,14 +48,14 @@ vpath % inc
 SRC := $(TARGET).asm
 
 NASM := nasm
-MAME := mame
+MAME := /root/bldmame1/mame
 #MAME := $(HOME)/Git/mame/v9kemu
 SHASUM := shasum
 
-RAM = 256
-#SERIAL = pty
-SERIAL = null_modem -bitb socket.localhost:7201
-ROMPATH = $(HOME)/.mame/roms
+RAM = 896
+SERIAL = pty
+#SERIAL = null_modem -bitb socket.localhost:7201
+ROMPATH = $(HOME)/mrom
 FE_NAME= "v9000 univ. fe f3f7 13db.7j"
 FF_NAME= "v9000 univ. ff f3f7 39fe.8j"
 export RAM SERIAL BREAK FLAGS
@@ -74,9 +74,6 @@ roms:
 	mv $(TARGET)_aa $(TARGET)_FE.bin
 	mv $(TARGET)_ab $(TARGET)_FF.bin
 	$(info )
-	bin2hex -q -o $(TARGET).hex $(TARGET).bin
-	bin2hex -q -o $(TARGET)_FE.hex $(TARGET)_FE.bin
-	bin2hex -q -o $(TARGET)_FF.hex $(TARGET)_FF.bin
 	$(info )
 
 tidy:

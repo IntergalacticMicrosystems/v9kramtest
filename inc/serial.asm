@@ -266,7 +266,7 @@ scr_getxy:
 	push	ax
 
 	mov	ax, [ss:scrPos]
-	mov	dl, 80
+	mov	dl, 112   ; 80
 	div	dl			; now al = y, ah = x
 	mov	dh, al
 	mov	dl, ah
@@ -296,7 +296,7 @@ calc_scr_pos:
 	jz		.muly
 	dec dh
 .muly:
-	mov	al, 80		; number of columns
+	mov	al, 112		; 80 ; number of columns
 	mul	dh			; ax := y * 80
 	xor	dh, dh
 	add	ax, dx		; add character offset
@@ -324,7 +324,7 @@ scr_fill_line:
 		call	scr_getxy
 		xor	dl, dl
 		call	scr_goto
-		mov	cx, 80
+		mov	cx, 112  	; 80
 		call	scr_fill
 
 		pop	dx
@@ -400,14 +400,27 @@ scr_test_announce:
 ; MARK: __send_al_bcd
 __send_al_bcd:
 ; input:
-;	al = binary number
-	aam				; convert to BCD
-	add ax,	3030h	; convert to ASCII
-	push 	ax
-	mov al, ah
+;	al = binary number (0-255)
+; outputs hundreds digit if present, then always tens and ones
+	push	bx
+	xor	ah, ah		; clear ah, ax = value
+	mov	bl, 100
+	div	bl		; al = hundreds (0-2), ah = remainder (0-99)
+	mov	bl, ah		; save remainder
+	cmp	al, 0
+	jz	.no_hundreds
+	add	al, '0'
 	call	SendAlToCom1Raw
-	pop 	ax
+.no_hundreds:
+	mov	al, bl		; get remainder (0-99)
+	aam			; ah = tens, al = ones
+	add	ax, 3030h	; convert to ASCII
+	push	ax
+	mov	al, ah
 	call	SendAlToCom1Raw
+	pop	ax
+	call	SendAlToCom1Raw
+	pop	bx
 	ret
 
 

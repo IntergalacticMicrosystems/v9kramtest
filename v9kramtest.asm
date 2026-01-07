@@ -31,8 +31,8 @@ rwdata_start:
 
 ; %define num_segments 8
 %define first_segment 0
-%define num_segments 40
-%define bytes_per_segment 0x4000
+%define num_segments 56   ; 40 = 640K, 56 = 896K
+%define bytes_per_segment 0x4000   ; 0x4000
 %define USE_SERIAL 1
 
 ; ---------------------------------------------------------------------------

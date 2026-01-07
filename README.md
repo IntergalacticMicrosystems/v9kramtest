@@ -1,4 +1,9 @@
-# RAM test ROM for Victor 9000 / ACT Sirius 1
+# RAM test ROM for Victor 9000 / ACT Sirius 1  
+  
+## IGM tweaks:  
+- Now tests up to 896K (needs serial terminal with 112 cols)  
+- Only needs 4K / the FF ROM (if using 2732)  
+
 
 by Florian Reitz based on XTRAMTEST by David Giller
 

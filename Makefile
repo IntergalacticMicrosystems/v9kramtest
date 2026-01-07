@@ -70,9 +70,10 @@ export RAM SERIAL BREAK FLAGS
 $(ROMS): $(TARGET).bin
 
 roms:
-	split -b 4k $(TARGET).bin $(TARGET)_
-	mv $(TARGET)_aa $(TARGET)_FE.bin
-	mv $(TARGET)_ab $(TARGET)_FF.bin
+#	split -b 4k $(TARGET).bin $(TARGET)_
+#	mv $(TARGET)_aa $(TARGET)_FE.bin
+#	mv $(TARGET)_ab $(TARGET)_FF.bin
+	cp $(TARGET).bin $(TARGET)_FF.bin
 	$(info )
 	$(info )
 
@@ -96,7 +97,7 @@ debug: $(TARGET).debug run
 
 run: all
 	rm -f comments/victor9k.cmt
-	cp $(TARGET)_FE.bin $(ROMPATH)/victor9k/$(FE_NAME)
+#	cp $(TARGET)_FE.bin $(ROMPATH)/victor9k/$(FE_NAME)
 	cp $(TARGET)_FF.bin $(ROMPATH)/victor9k/$(FF_NAME)
 	$(MAME) victor9k -inipath ./test -rompath $(ROMPATH) -rs232a $(SERIAL) -ramsize $(RAM)K $(DEBUG) $(FLAGS)
 

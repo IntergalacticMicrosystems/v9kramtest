@@ -16,8 +16,8 @@
 ; section .resetvec 	start=RESET align=1
 
 START		equ	00000h
-RESET		equ	01FF0h
-BASESEG		equ	0FE00h
+RESET		equ	00FF0h  ; 01FF0h
+BASESEG		equ	0FF00h	; 0FE00h
 
 section .text		start=START align=1
 section .lib		follows=.text align=1

@@ -2,8 +2,11 @@
   
 ## IGM tweaks:  
 - Now tests up to 896K (needs serial terminal with 112 cols)  
-- Only needs 4K / the FF ROM (if using 2732)  
+- Only needs 4K / the FF ROM (if using 2732)
 
+![Screenshot](img/896k-screenshot.png)  
+
+---  
 
 by Florian Reitz based on XTRAMTEST by David Giller
 

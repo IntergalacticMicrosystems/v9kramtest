@@ -2,7 +2,8 @@
   
 ## IGM tweaks:  
 - Now tests up to 896K (needs serial terminal with 112 cols)  
-- Only needs 4K / the FF ROM (if using 2732)  
+- Only needs 4K / the FF ROM (if using 2732 jumpers) 
+- OR (not thoroughly tested) - 2732 jumpers and 2716 ROM
 
 
 by Florian Reitz based on XTRAMTEST by David Giller

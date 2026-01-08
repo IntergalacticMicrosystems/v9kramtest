@@ -73,7 +73,9 @@ roms:
 #	split -b 4k $(TARGET).bin $(TARGET)_
 #	mv $(TARGET)_aa $(TARGET)_FE.bin
 #	mv $(TARGET)_ab $(TARGET)_FF.bin
-	cp $(TARGET).bin $(TARGET)_FF.bin
+	cp $(TARGET).bin $(TARGET)_2716.bin
+	cat 2048.pad $(TARGET).bin > $(TARGET)_2732.bin
+	cat 2048.pad 2048.pad 2048.pad $(TARGET).bin  > $(TARGET)_2764.bin
 	$(info )
 	$(info )
 

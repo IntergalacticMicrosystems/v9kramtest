@@ -5,6 +5,9 @@
 - Only needs 4K / the FF ROM (if using 2732 jumpers) 
 - OR (not thoroughly tested) - 2732 jumpers and 2716 ROM
 
+![Screenshot](img/896k-screenshot.png)  
+
+---  
 
 by Florian Reitz based on XTRAMTEST by David Giller
 

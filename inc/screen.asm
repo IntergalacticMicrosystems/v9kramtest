@@ -17,6 +17,7 @@ section .rwdata ; MARK: __ .rwdata __
 	test_num	db	?	; test number
 
 	test_offset	db	?	; test x offset on screen (how many columns to the right)
+	seg_err_count dw ?  ; counter for segments with errors
 
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
@@ -78,6 +79,7 @@ scr_test_header		asciiz	"Pass "
 scr_test_separator	asciiz	": "
 scr_label_march		asciiz	"March-U "
 scr_label_bit		asciiz	"Bus Exercise "
+scr_seg_err_lbl		asciiz	"Segs with errors: "
 
 scr_sep_line		equ	2
 scr_sep_char		equ	'-'

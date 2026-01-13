@@ -110,6 +110,10 @@ ram_test_segment:
 		je	.nextseg	; if so, don't bother testing it again
 
 		call	bp		; run the specified step
+		cmp dh, 0
+		je .nextseg
+		
+		add	word [ss:seg_err_count], 1	    ; inc seg err count
 
 	.nextseg:
 		call	endseg
@@ -124,6 +128,20 @@ startseg:
 		push	si
 		push	ds
 		push 	dx		; print the test addresses
+
+		; print the error counter
+		mov	dx, scr_addrs_xy
+		sub dx, 20
+		call	scr_goto
+		mov al, 'E'
+		call	scr_putc
+		mov al, 'r'
+		call	scr_putc
+		call	scr_putc	
+		mov al, ':'
+		call	scr_putc		
+		mov ax,[ss:seg_err_count]
+		call scr_put_hex_ax
 
 		mov	dx, scr_addrs_xy
 		call	scr_goto

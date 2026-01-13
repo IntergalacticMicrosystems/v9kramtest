@@ -60,7 +60,6 @@ FE_NAME= "v9000 univ. fe f3f7 13db.7j"
 FF_NAME= "v9000 univ. ff f3f7 39fe.8j"
 export RAM SERIAL BREAK FLAGS
 
-
 %.bin: %.asm %.dep Makefile
 	$(NASM) $(INC) -f bin -o $@ -l $(@:%.bin=%.lst) -Lm $(DEFS) $<
 	$(info )

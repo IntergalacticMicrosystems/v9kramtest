@@ -90,6 +90,7 @@ v9kramtest_start:
 	cli
 	cld
 
+	mov word [ss:seg_err_count], 0 ; init seg err count
 v9kramtest_loop: 
 	add	word [ss:pass_count], 1		; Increment the pass count.
 

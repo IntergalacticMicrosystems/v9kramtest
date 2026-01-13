@@ -1,5 +1,7 @@
 # RAM test ROM for Victor 9000 / ACT Sirius 1  
-  
+
+# NOTE: MAME Victor 9000 emulation patches the ROM before running - causes issues with testing.  See victor9k.cpp around line 683
+
 ## IGM tweaks:  
 - Now tests up to 896K (needs serial terminal with 112 cols)  
 - Only needs 4K / the FF ROM (if using 2732 jumpers) 

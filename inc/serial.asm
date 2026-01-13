@@ -386,7 +386,6 @@ scr_test_announce:
 		call	scr_puts
 
 		mov	ah, [ss:test_num]		; show the test's number (step for march, value for ganssle)
-
 		call	scr_put_hex_ah
 
 		pop	ds

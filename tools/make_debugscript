@@ -3,7 +3,7 @@ use strict;
 use Data::Dumper;
 # use Antsy qw(:all);
 
-my $BASEADDR = 0xFE000;
+my $BASEADDR = 0xFF000;
 
 my $break = join( "|", split( / /, $ENV{BREAK} ) );
 # warn "break = $break\n";

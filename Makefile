@@ -73,9 +73,13 @@ roms:
 #	split -b 4k $(TARGET).bin $(TARGET)_
 #	mv $(TARGET)_aa $(TARGET)_FE.bin
 #	mv $(TARGET)_ab $(TARGET)_FF.bin
-	cp $(TARGET).bin $(TARGET)_2716.bin
-	cat 2048.pad $(TARGET).bin > $(TARGET)_2732.bin
-	cat 2048.pad 2048.pad 2048.pad $(TARGET).bin  > $(TARGET)_2764.bin
+
+#	cp $(TARGET).bin $(TARGET)_2716.bin
+#	cat 2048.pad $(TARGET).bin > $(TARGET)_2732.bin
+#	cat 2048.pad 2048.pad 2048.pad $(TARGET).bin  > $(TARGET)_2764.bin
+
+	cat $(TARGET).bin > $(TARGET)_2732.bin
+	cat 2048.pad 2048.pad $(TARGET).bin  > $(TARGET)_2764.bin
 	$(info )
 	$(info )
 
@@ -100,7 +104,7 @@ debug: $(TARGET).debug run
 run: all
 	rm -f comments/victor9k.cmt
 #	cp $(TARGET)_FE.bin $(ROMPATH)/victor9k/$(FE_NAME)
-	cp $(TARGET)_FF.bin $(ROMPATH)/victor9k/$(FF_NAME)
+	cp $(TARGET)_2732.bin $(ROMPATH)/victor9k/$(FF_NAME)
 	$(MAME) victor9k -inipath ./test -rompath $(ROMPATH) -rs232a $(SERIAL) -ramsize $(RAM)K $(DEBUG) $(FLAGS)
 
 .PHONY: all binaries clean run version debug deps

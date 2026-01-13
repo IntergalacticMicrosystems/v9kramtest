@@ -16,7 +16,7 @@
 ; section .resetvec 	start=RESET align=1
 
 ; NOTE: Fits in 2K at the moment, Intel D2716 works in 7H if jumpers set for 2732
-START		equ	00800h  ; 2716 = 00800h, 2764, 2732 = 0
+START		equ	00000h  ; 2716 = 00800h, 2764, 2732 = 0
 RESET		equ	00FF0h  ; 2716, 2732 = 00FF0h, 2764 = 01FF0h 
 BASESEG		equ	0FF00h	; 2716, 2732 = 0FF00h, 2764 = 0FE00h
 
